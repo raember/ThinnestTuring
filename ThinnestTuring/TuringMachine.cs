@@ -1,53 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ThinnestTuring
 {
     public class TuringMachine
     {
+        public const int STATE_ACCEPT = -1;
+        public const int STATE_FAIL = -2;
         private readonly List<TuringTape> tapes = new List<TuringTape>();
-        private int state;
-        public int CalculatedSteps { get; private set; }
+        private State currentState;
 
-        public static readonly int STATE_ACCEPT = -1;
-        public static readonly int STATE_FAIL = -2;
-
-        public TuringMachine(Func<int, List<TuringTape>, int> transitionAction, uint amountOfBands, string baseWord){
-            TransitionAction = transitionAction;
+        public TuringMachine(State startingState, uint amountOfBands){
             Mode = TuringMode.STEP;
-            if (amountOfBands == 0){
+            currentState = startingState;
+            if (amountOfBands == 0) {
                 throw new ArgumentOutOfRangeException("amountOfBands", "The amount of tapes may not be zero.");
             }
-            tapes.Add(new TuringTape(baseWord));
-            while (amountOfBands > 1){
+            while (amountOfBands > 0) {
                 tapes.Add(new TuringTape(string.Empty));
                 amountOfBands--;
             }
         }
 
-        public TuringMachine(Func<int, List<TuringTape>, int> transitionAction, string baseWord = "")
-            : this(transitionAction, 1, baseWord){}
+        public TuringMachine(State startingState)
+            : this(startingState, 1){}
 
-        public TuringMode Mode { get; set; }
-        public Func<int, List<TuringTape>, int> TransitionAction { get; set; }
+        public int CalculatedSteps {get; private set;}
+        public TuringMode Mode {get; set;}
 
-        public void Step(){
-            state = TransitionAction.Invoke(state, tapes);
+        private void Step(){
+            currentState = currentState.GetNextState(tapes);
             CalculatedSteps++;
-            if (Mode == TuringMode.STEP){
+            if (Mode == TuringMode.STEP) {
                 print();
             }
         }
 
-        public bool Compute(){
-            while (state >= 0){
+        public bool Compute(List<char> word){
+            var tape = tapes.First();
+            word.Reverse();
+            word.GetRange(0, word.Count - 1).ForEach(c => tape.WriteLeft(c));
+            tape.WriteStay(word.Last());
+            if (Mode == TuringMode.STEP) {
+                print();
+            }
+            while (currentState.Index >= 0) {
                 Step();
-                //Console.ReadKey();
+                if (Mode == TuringMode.STEP) {
+                    //Console.ReadKey();
+                }
             }
             if (Mode == TuringMode.RUN) {
                 print();
             }
-            return (state == STATE_ACCEPT);
+            return (currentState.Index == STATE_ACCEPT);
+        }
+
+        public bool Compute(string word){
+            return Compute(word.ToList());
         }
 
         public void print(){
@@ -55,10 +66,10 @@ namespace ThinnestTuring
             var origColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine(new string('=', 72));
-            foreach (var band in tapes){
+            foreach (var band in tapes) {
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Write("Band " + bandN + ":[");
-                band.print(state);
+                band.print(currentState.Index);
                 Console.WriteLine("]");
                 bandN++;
             }
