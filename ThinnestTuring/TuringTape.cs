@@ -6,18 +6,16 @@ namespace ThinnestTuring
     public sealed class TuringTape
     {
         public const int BANDOVERHEAD = 15;
-        private readonly List<char> tape;
         private int headPosition;
 
         public TuringTape(string baseWord, char emptySlot = '_'){ //'␣' doesn't work
-            if (emptySlot.Equals('_')) {
-                emptySlot = char.Parse("_");
-            }
+            if (emptySlot.Equals('_')) { emptySlot = char.Parse("_"); }
             tape = new List<char>(baseWord.ToCharArray());
             this.emptySlot = emptySlot;
         }
 
         public TuringTape() : this(string.Empty){}
+        public List<char> tape {get;}
         public char emptySlot {get;}
 
         public void WriteLeft(char write){
@@ -60,9 +58,7 @@ namespace ThinnestTuring
         }
 
         public char Read(){
-            if (headPosition < 0 || headPosition >= tape.Count) {
-                return emptySlot;
-            }
+            if (headPosition < 0 || headPosition >= tape.Count) { return emptySlot; }
             return tape[headPosition];
         }
 
@@ -72,17 +68,23 @@ namespace ThinnestTuring
             var maxIndex = headPosition + BANDOVERHEAD;
             for (var index = minIndex; index < maxIndex; index++) {
                 if (index == headPosition) {
-                    Console.ForegroundColor = ConsoleColor.Green;
                     if (state == TuringMachine.STATE_ACCEPT) {
+                        Console.ForegroundColor = ConsoleColor.Green;
                         Console.Write("qe");
                     } else if (state == TuringMachine.STATE_FAIL) {
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write("X");
-                    }else {
+                    } else {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.Write("q" + state);
                     }
                 }
                 if (index >= 0 && index < tape.Count) {
-                    Console.ForegroundColor = ConsoleColor.White;
+                    if (tape[index] != emptySlot) {
+                        Console.ForegroundColor = ConsoleColor.White;
+                    } else {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                    }
                     Console.Write(tape[index]);
                 } else {
                     Console.ForegroundColor = ConsoleColor.DarkGray;

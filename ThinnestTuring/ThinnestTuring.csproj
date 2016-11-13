@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AcceptingState.cs" />
+    <Compile Include="Condition.cs" />
     <Compile Include="DroppingState.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
