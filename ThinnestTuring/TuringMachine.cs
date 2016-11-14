@@ -80,7 +80,7 @@ namespace ThinnestTuring
 
 		//TODO: Implement LaTeX export
 		public string ToLaTeX(){
-			var usedStates = new List<State>();
+			var str = string.Empty;
 			foreach (var s in States) {
 				for (int i = 0; i < s.Conditions.Count - 1; i++){
 					switch (i) {

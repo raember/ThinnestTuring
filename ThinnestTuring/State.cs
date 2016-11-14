@@ -40,9 +40,13 @@ namespace ThinnestTuring
             return match.Apply(read);
         }
 
-		public string ToLaTeX(State fromState){// {$q_{{3}}$};
-			return string.Format("\\node[{0}state]({2})[right of = {1}]", _tikzPrefix, this, fromState, Index);
-        }
+		public string ToLaTeX(State fromState, string direction){// {$q_{{2}}$};
+			return string.Format("\\node[{0}state]({2})[{4} of = {1}] {3}",
+				_tikzPrefix, this, fromState, Index, "{$q_{" + this + "}$}", direction);
+		}
+		public string ToLaTeX(){// {$q_{{3}}$};
+			return string.Format("\\node[{0}state]({2}) {3}", _tikzPrefix, this, "{$q_{" + this + "}$}");
+		}
         public static List<State> FromLaTeX(string input) {
             List<State> states = new List<State>();
             foreach (Match mtch in Regex.Matches(input,
