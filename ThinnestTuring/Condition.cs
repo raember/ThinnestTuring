@@ -50,16 +50,18 @@ namespace ThinnestTuring
         public State Apply(List<TuringTape> tapes){
             var pattern = string.Join(string.Empty, Pattern.Replace('*', '.').ToList().ConvertAll(c => "(" + c + ")"));
             var replace = string.Empty;
-            var index = 0;
+            var index = 1;
             foreach (var c in Replacement.ToCharArray()) {
-                index++;
                 if (c == '*') {
-                    replace += "$" + index;
+					replace += "$" + index+",";
+					index++;
                     continue;
-                }
-                replace += c;
+				}
+				index++;
+				replace += c+",";
             }
-            var newKonf = Regex.Replace(new string(tapes.ConvertAll(t => t.Read()).ToArray()), pattern, replace);
+			var newKonf = Regex.Replace(new string(tapes.ConvertAll(t => t.Read()).ToArray()), pattern, replace);
+			newKonf = newKonf.Replace(",", "");
             for (var i = 0; i < tapes.Count; i++) {
                 switch (Movement[i]) {
                     case HeadMovement.Left:
@@ -85,8 +87,7 @@ namespace ThinnestTuring
 
         public string ToLaTeX(){
             if (NextState.Equals(FromState)) {
-                return string.Format("({0}) edge[out=80,in=100,loop] node[above]{1} ({0})", FromState,
-                    "{$" + GetCondition() + "$}");
+				return string.Format("({0}) edge[out=80,in=100,loop] node[above]{${1}$} ({0})", FromState, GetCondition());
             }
             return string.Format("({0}) edge node[above]{1} ({2})", FromState, "{$" + GetCondition() + "$}", NextState);
         }

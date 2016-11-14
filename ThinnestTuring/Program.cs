@@ -54,10 +54,10 @@ namespace ThinnestTuring
             Q1.AddCondition("_**/_**,SSS", QE);
 
             // q2: Addiere Band 2 auf Band 3
-            Q2.AddCondition("*0*/*00,SRR", Q2);
+            Q2.AddCondition("*0_/*00,SRR", Q2);
             Q2.AddCondition("*_*/*_*,SLS", Q3);
 
-            // q3: Rücke zum Anfang des zweiten Faktors
+			// q3: Rücke zum Anfang des ersten Faktors
             Q3.AddCondition("*0*/*0*,SLS", Q3);
             Q3.AddCondition("*_*/*_*,SRS", Q1);
             

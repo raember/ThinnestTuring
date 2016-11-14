@@ -31,6 +31,9 @@ namespace ThinnestTuring
         public TuringMode Mode {get; set;}
 
         private void Step(){
+			if (currentState.Index == 2) {
+				var a = 0;
+			}
             currentState = currentState.GetNextState(tapes);
             CalculatedSteps++;
             if (Mode == TuringMode.Step) { print(); }
