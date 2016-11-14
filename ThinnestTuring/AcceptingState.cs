@@ -2,6 +2,6 @@
 {
     public sealed class AcceptingState : State
     {
-        public AcceptingState() : base(TuringMachine.STATE_ACCEPT, "accepting,"){}
+		public AcceptingState(int index) : base(index, "accepting,"){}
     }
 }

@@ -14,6 +14,10 @@ namespace ThinnestTuring
             Movement = movement;
             NextState = nextState;
             FromState = fromState;
+			AmountOfTapes = pattern.Length;
+			if (replacement.Length != AmountOfTapes || movement.Count != AmountOfTapes) {
+				throw new ArgumentException("The amounts of tapes required differes among the input variables.");
+			}
         }
 
         public string Pattern {get;}
@@ -78,6 +82,8 @@ namespace ThinnestTuring
             return NextState;
         }
 
+		public int AmountOfTapes {get; private set;}
+
         public string GetCondition(){
             var pattern = string.Join(string.Empty, Pattern);
             var replace = string.Join(string.Empty, Replacement);
@@ -86,8 +92,8 @@ namespace ThinnestTuring
         }
 
         public string ToLaTeX(){
-            if (NextState.Equals(FromState)) {
-				return string.Format("({0}) edge[out=80,in=100,loop] node[above]{${1}$} ({0})", FromState, GetCondition());
+			if (NextState.Equals(FromState)) {//{${1}$} ({0})
+				return string.Format("({0}) edge[out=80,in=100,loop] node[above]{1} ({0})", FromState, "{$"+GetCondition()+"$}");
             }
             return string.Format("({0}) edge node[above]{1} ({2})", FromState, "{$" + GetCondition() + "$}", NextState);
         }

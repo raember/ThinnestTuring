@@ -6,73 +6,104 @@ namespace ThinnestTuring
 {
     public class TuringMachine
     {
-        public const int STATE_ACCEPT = -1;
-        public const int STATE_FAIL = -2;
-        private State currentState;
+		private bool checkedConditions;
 
-        public TuringMachine(State startingState, uint amountOfBands){
+        public TuringMachine(){
             Mode = TuringMode.Step;
-            currentState = startingState;
-            if (amountOfBands == 0) {
-                throw new ArgumentOutOfRangeException("amountOfBands", "The amount of tapes may not be zero.");
-            }
-            tapes = new List<TuringTape>();
-            while (amountOfBands > 0) {
-                tapes.Add(new TuringTape(string.Empty));
-                amountOfBands--;
-            }
+            Tapes = new List<TuringTape>();
+			States = new List<State>();
         }
 
-        public TuringMachine(State startingState)
-            : this(startingState, 1){}
-
-        public List<TuringTape> tapes {get;}
+        public List<TuringTape> Tapes {get;}
         public int CalculatedSteps {get; private set;}
         public TuringMode Mode {get; set;}
+		public List<State> States {get; private set;}
+		public State CurrentState { get; set;}
 
-        private void Step(){
-			if (currentState.Index == 2) {
-				var a = 0;
+		public bool Prepare() {
+			var amountOfTapes = CurrentState.AmountOfTapes;
+			if (States.All(s => s.AmountOfTapes == amountOfTapes || s.AmountOfTapes == 0)) {
+				for (int i = 0; i < amountOfTapes; i++) {
+					Tapes.Add(new TuringTape());
+				}
+				checkedConditions = true;
 			}
-            currentState = currentState.GetNextState(tapes);
-            CalculatedSteps++;
-            if (Mode == TuringMode.Step) { print(); }
-        }
+			return checkedConditions;
+		}
+
+		public bool Compute(string word){
+			return Compute(word.ToList());
+		}
 
         public bool Compute(List<char> word){
-            var tape = tapes.First();
+			if (!checkedConditions) {
+				throw new Exception("I'm not prepared yet.");
+			}
+            var tape = Tapes.First();
             if (word.Any()) {
                 word.Reverse();
                 word.GetRange(0, word.Count - 1).ForEach(c => tape.WriteLeft(c));
                 tape.WriteStay(word.Last());
             }
-            if (Mode == TuringMode.Step) { print(); }
-            while (currentState.Index >= 0) {
-                Step();
-                if (Mode == TuringMode.Step) {
-                    //Console.ReadKey();
+			if (Mode == TuringMode.Step) { print(false); }
+			while (CurrentState.CanStep(Tapes)) {
+				CurrentState = CurrentState.GetNextState(Tapes);
+				CalculatedSteps++;
+				if (Mode == TuringMode.Step) {
+					print(false);
+					//Console.ReadKey();
                 }
             }
-            if (Mode == TuringMode.Run) { print(); }
-            return (currentState.Index == STATE_ACCEPT);
+			var accepted = (CurrentState is AcceptingState);
+			if (!accepted) {CurrentState = new DroppingState(int.MinValue);}
+            print(accepted);
+			return (accepted);
         }
 
-        public bool Compute(string word){
-            return Compute(word.ToList());
-        }
+		public State CreateState(){
+			var newState = new State(States.Count(s => s is State));
+			if (CurrentState == null) {
+				CurrentState = newState;
+			}
+			States.Add(newState);
+			return newState;
+		}
 
-        public void print(){
+		public AcceptingState CreateAcceptingState() {
+			var newState = new AcceptingState(-1-States.Count(s => s is AcceptingState));
+			if (CurrentState == null) {
+				CurrentState = newState;
+			}
+			States.Add(newState);
+			return newState;
+		}
+
+		//TODO: Implement LaTeX export
+		public string ToLaTeX(){
+			var usedStates = new List<State>();
+			foreach (var s in States) {
+				for (int i = 0; i < s.Conditions.Count - 1; i++){
+					switch (i) {
+						case 0:
+							break;
+					}
+				}
+			}
+			return null;
+		}
+
+		public void print(bool accepted){
             var bandN = 0;
             var origColor = Console.ForegroundColor;
-            if (tapes.Count > 1) {
+            if (Tapes.Count > 1) {
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
                 Console.WriteLine(new string('=', 41));
             }
-            foreach (var band in tapes) {
+			foreach (var tape in Tapes) {
                 Console.ForegroundColor = ConsoleColor.Gray;
-                if (tapes.Count > 1) { Console.Write("Band " + bandN + ":"); }
+                if (Tapes.Count > 1) { Console.Write("Band " + bandN + ":"); }
                 Console.Write("[");
-                band.print(currentState.Index);
+				tape.print(CurrentState, accepted);
                 Console.WriteLine("]");
                 bandN++;
             }

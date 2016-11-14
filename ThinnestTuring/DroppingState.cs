@@ -1,6 +1,7 @@
 ﻿namespace ThinnestTuring
 {
-    public sealed class DroppingState : State {
-        public DroppingState() : base(TuringMachine.STATE_FAIL){}
-    }
+	public sealed class DroppingState : State
+	{
+		public DroppingState(int index) : base(index){}
+	}
 }

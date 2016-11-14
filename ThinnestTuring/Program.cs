@@ -16,9 +16,10 @@ namespace ThinnestTuring
                 Console.WriteLine("===============");
                 Console.WriteLine();
                 Console.WriteLine("Bitte ein Wort angeben.");
-                var states = CreateUnaryMultiplicationStates();
                 //var states = CreateStates();
-                var TM = new TuringMachine(states.First(), 3);
+				var TM = new TuringMachine();
+				CreateUnaryMultiplicationStates(TM);
+				TM.Prepare();
                 //TM.Mode = TuringMode.Run;
                 var input = Console.ReadLine();
                 Console.WriteLine("...Teste auf unäre Multiplikation...");
@@ -30,7 +31,9 @@ namespace ThinnestTuring
                 if (TM.Compute(input)) {
                     Console.WriteLine("Das Wort gehört zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);
-                    Console.WriteLine("Resultat: {0}", TM.tapes.Last().tape.Count);
+					Console.WriteLine("Resultat: {0}", TM.Tapes.Last().tape.Count - 1);
+					Console.WriteLine("===============");
+					Console.WriteLine("===============");
                 } else {
                     Console.WriteLine("Das Wort gehört nicht zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);
@@ -38,12 +41,12 @@ namespace ThinnestTuring
             }
         }
 
-        private static List<State> CreateUnaryMultiplicationStates(){
-            var Q0 = new State(0);
-            var Q1 = new State(1);
-            var Q2 = new State(2);
-            var Q3 = new State(3);
-            var QE = new AcceptingState();
+		private static void CreateUnaryMultiplicationStates(TuringMachine tm){
+			var Q0 = tm.CreateState();
+            var Q1 = tm.CreateState();
+            var Q2 = tm.CreateState();
+            var Q3 = tm.CreateState();
+			var QE = tm.CreateAcceptingState();
 
             // q0: Übertrage ersten Faktor auf Band 2
             Q0.AddCondition("0**/_0*,RLS", Q0);
@@ -60,8 +63,6 @@ namespace ThinnestTuring
 			// q3: Rücke zum Anfang des ersten Faktors
             Q3.AddCondition("*0*/*0*,SLS", Q3);
             Q3.AddCondition("*_*/*_*,SRS", Q1);
-            
-            return new[]{Q0, Q1, Q2, Q3, QE}.ToList();
         }
 
         //private static List<State> CreateStates(){

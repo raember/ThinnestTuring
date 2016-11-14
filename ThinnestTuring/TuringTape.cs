@@ -62,21 +62,26 @@ namespace ThinnestTuring
             return tape[headPosition];
         }
 
-        public void print(int state){
+		public void print(State state, bool accepted){
             var origColor = Console.ForegroundColor;
             var minIndex = headPosition - BANDOVERHEAD;
             var maxIndex = headPosition + BANDOVERHEAD;
             for (var index = minIndex; index < maxIndex; index++) {
                 if (index == headPosition) {
-                    if (state == TuringMachine.STATE_ACCEPT) {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write("qe");
-                    } else if (state == TuringMachine.STATE_FAIL) {
+					if (state is AcceptingState) {
+						if (accepted) {
+							Console.ForegroundColor = ConsoleColor.Green;
+							Console.Write(state);
+						} else {
+							Console.ForegroundColor = ConsoleColor.DarkGreen;
+							Console.Write(state);
+						}
+					} else if (state is DroppingState) {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write("X");
                     } else {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Write("q" + state);
+						Console.Write(state);
                     }
                 }
                 if (index >= 0 && index < tape.Count) {
@@ -93,5 +98,10 @@ namespace ThinnestTuring
             }
             Console.ForegroundColor = origColor;
         }
+
+		public override string ToString()
+		{
+			return string.Join(string.Empty,tape).Insert(headPosition,"q");
+		}
     }
 }
