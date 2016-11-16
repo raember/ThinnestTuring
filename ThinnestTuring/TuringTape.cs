@@ -62,14 +62,14 @@ namespace ThinnestTuring
             return tape[headPosition];
         }
 
-		public void print(State state, bool accepted){
+		public void print(State state, bool final){
             var origColor = Console.ForegroundColor;
             var minIndex = headPosition - BANDOVERHEAD;
             var maxIndex = headPosition + BANDOVERHEAD;
             for (var index = minIndex; index < maxIndex; index++) {
                 if (index == headPosition) {
 					if (state is AcceptingState) {
-						if (accepted) {
+						if (final) {
 							Console.ForegroundColor = ConsoleColor.Green;
 							Console.Write(state);
 						} else {

@@ -18,7 +18,7 @@ namespace ThinnestTuring
                 Console.WriteLine("Bitte ein Wort angeben.");
                 //var states = CreateStates();
 				var TM = new TuringMachine();
-				CreateUnaryMultiplicationStates(TM);
+				CreateImprovedUnaryMultiplicationStates(TM);
 				TM.Prepare();
                 //TM.Mode = TuringMode.Run;
                 var input = Console.ReadLine();
@@ -31,7 +31,7 @@ namespace ThinnestTuring
                 if (TM.Compute(input)) {
                     Console.WriteLine("Das Wort gehört zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);
-					Console.WriteLine("Resultat: {0}", TM.Tapes.Last().tape.Count - 1);
+					Console.WriteLine("Resultat: {0}",TM.Tapes.Last().tape.Count(c => c.Equals('0')));
 					Console.WriteLine("===============");
 					Console.WriteLine("===============");
                 } else {
@@ -39,31 +39,69 @@ namespace ThinnestTuring
                                       TM.CalculatedSteps);
                 }
             }
-        }
+		}
 
 		private static void CreateUnaryMultiplicationStates(TuringMachine tm){
 			var Q0 = tm.CreateState();
-            var Q1 = tm.CreateState();
-            var Q2 = tm.CreateState();
-            var Q3 = tm.CreateState();
+			var Q1 = tm.CreateState();
+			var Q2 = tm.CreateState();
+			var Q3 = tm.CreateState();
 			var QE = tm.CreateAcceptingState();
 
-            // q0: Übertrage ersten Faktor auf Band 2
-            Q0.AddCondition("0**/_0*,RLS", Q0);
-            Q0.AddCondition("1**/_**,RRS", Q1);
+			// q0: Übertrage ersten Faktor auf Band 2
+			Q0.AddCondition("0**/_0*,RLS", Q0);
+			Q0.AddCondition("1**/_**,RRS", Q1);
 
-            // q1: Überprüfe, ob noch eine Stelle des ersten Faktors zu verarbeiten ist
-            Q1.AddCondition("0**/0**,RSS", Q2);
-            Q1.AddCondition("_**/_**,SSS", QE);
+			// q1: Überprüfe, ob noch eine Stelle des ersten Faktors zu verarbeiten ist
+			Q1.AddCondition("0**/0**,RSS", Q2);
+			Q1.AddCondition("_**/_**,SSS", QE);
 
-            // q2: Addiere Band 2 auf Band 3
-            Q2.AddCondition("*0_/*00,SRR", Q2);
-            Q2.AddCondition("*_*/*_*,SLS", Q3);
+			// q2: Addiere Band 2 auf Band 3
+			Q2.AddCondition("*0_/*00,SRR", Q2);
+			Q2.AddCondition("*_*/*_*,SLS", Q3);
 
 			// q3: Rücke zum Anfang des ersten Faktors
-            Q3.AddCondition("*0*/*0*,SLS", Q3);
-            Q3.AddCondition("*_*/*_*,SRS", Q1);
-        }
+			Q3.AddCondition("*0*/*0*,SLS", Q3);
+			Q3.AddCondition("*_*/*_*,SRS", Q1);
+		}
+
+		private static void CreateImprovedUnaryMultiplicationStates(TuringMachine tm){
+			var Q0 = tm.CreateState();
+			var Q1ZeroTimes = tm.CreateState();
+			var Q2Times = tm.CreateState();
+			var Q3Times = tm.CreateState();
+			var Q4 = tm.CreateState();
+			var Q5 = tm.CreateState();
+			var QE = tm.CreateAcceptingState();
+
+
+			//Does the word begin with a 1?
+			Q0.AddCondition("1**/1**,RSS", Q1ZeroTimes);
+
+			//Does the word begin with 1 and end with 0's?
+			Q1ZeroTimes.AddCondition("0**/0**,RSS", Q1ZeroTimes);
+			Q1ZeroTimes.AddCondition("_**/_**,SSS", QE);
+
+
+			//Does the word begin with a 0?
+			Q0.AddCondition("0**/_0*,RLS", Q2Times);
+			Q2Times.AddCondition("0**/_0*,RLS", Q2Times);
+			Q2Times.AddCondition("1**/_**,RRS", Q3Times);
+
+			//is the second factor zero?
+			Q3Times.AddCondition("_**/_**,SSS", QE);
+
+			//START MULTIPLICATION:
+
+			Q3Times.AddCondition("00*/000,RRL", Q4);
+			Q4.AddCondition("*0*/*00,SRL", Q4);
+			Q4.AddCondition("0_*/0_*,RLS", Q5);
+			Q4.AddCondition("__*/__*,SSR", QE);
+			Q5.AddCondition("*0*/*00,SLL", Q5);
+			Q5.AddCondition("0_*/0_0,RRL", Q5);
+			Q5.AddCondition("__*/__*,SRR", QE);
+			//01000?????
+		}
 
         //private static List<State> CreateStates(){
         //    var Q0 = new State(0);

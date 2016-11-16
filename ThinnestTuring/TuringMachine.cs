@@ -55,8 +55,8 @@ namespace ThinnestTuring
                 }
             }
 			var accepted = (CurrentState is AcceptingState);
-			if (!accepted) {CurrentState = new DroppingState(int.MinValue);}
-            print(accepted);
+			if (!accepted) {CurrentState = new DroppingState(int.MinValue);};
+            print(true);
 			return (accepted);
         }
 
@@ -92,18 +92,24 @@ namespace ThinnestTuring
 			return null;
 		}
 
-		public void print(bool accepted){
+		public void print(bool final){
             var bandN = 0;
             var origColor = Console.ForegroundColor;
-            if (Tapes.Count > 1) {
+			if (Tapes.Count > 1 && !final) {
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
                 Console.WriteLine(new string('=', 41));
             }
+			if (final) {
+				Console.ForegroundColor = ConsoleColor.Cyan;
+				Console.WriteLine(new string('=', 41));
+				Console.ForegroundColor = origColor;
+				Console.WriteLine("Final state has been reached:");
+			}
 			foreach (var tape in Tapes) {
                 Console.ForegroundColor = ConsoleColor.Gray;
                 if (Tapes.Count > 1) { Console.Write("Band " + bandN + ":"); }
                 Console.Write("[");
-				tape.print(CurrentState, accepted);
+				tape.print(CurrentState, final);
                 Console.WriteLine("]");
                 bandN++;
             }
