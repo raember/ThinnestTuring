@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace ThinnestTuring
 {
+    [Serializable]
     public sealed class TuringTape
     {
-        public const int BANDOVERHEAD = 15;
-        private int headPosition;
+        public const int TAPEPRINTOVERHEAD = 15;
+        [DataMember(Name = "HeadPosition")] private int headPosition;
 
         public TuringTape(string baseWord, char emptySlot = '_'){ //'␣' doesn't work
             if (emptySlot.Equals('_')) { emptySlot = char.Parse("_"); }
@@ -15,7 +17,11 @@ namespace ThinnestTuring
         }
 
         public TuringTape() : this(string.Empty){}
+
+        [DataMember(Name = "Tape")]
         public List<char> tape {get;}
+
+        [DataMember(Name = "EmptyChar")]
         public char emptySlot {get;}
 
         public void WriteLeft(char write){
@@ -62,26 +68,26 @@ namespace ThinnestTuring
             return tape[headPosition];
         }
 
-		public void print(State state, bool final){
+        public void print(State state, bool final){
             var origColor = Console.ForegroundColor;
-            var minIndex = headPosition - BANDOVERHEAD;
-            var maxIndex = headPosition + BANDOVERHEAD;
+            var minIndex = headPosition - TAPEPRINTOVERHEAD;
+            var maxIndex = headPosition + TAPEPRINTOVERHEAD;
             for (var index = minIndex; index < maxIndex; index++) {
                 if (index == headPosition) {
-					if (state is AcceptingState) {
-						if (final) {
-							Console.ForegroundColor = ConsoleColor.Green;
-							Console.Write(state);
-						} else {
-							Console.ForegroundColor = ConsoleColor.DarkGreen;
-							Console.Write(state);
-						}
-					} else if (state is DroppingState) {
+                    if (state is AcceptingState) {
+                        if (final) {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.Write(state);
+                        } else {
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
+                            Console.Write(state);
+                        }
+                    } else if (state is DroppingState) {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write("X");
                     } else {
                         Console.ForegroundColor = ConsoleColor.Yellow;
-						Console.Write(state);
+                        Console.Write(state);
                     }
                 }
                 if (index >= 0 && index < tape.Count) {
@@ -99,9 +105,8 @@ namespace ThinnestTuring
             Console.ForegroundColor = origColor;
         }
 
-		public override string ToString()
-		{
-			return string.Join(string.Empty,tape).Insert(headPosition,"q");
-		}
+        public override string ToString(){
+            return string.Join(string.Empty, tape).Insert(headPosition, "q");
+        }
     }
 }

@@ -1,36 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace ThinnestTuring
 {
-    public sealed class Condition
+    [Serializable]
+    public sealed class Transition
     {
-        private Condition(string pattern, string replacement, List<HeadMovement> movement, State fromState,
-                          State nextState){
+        private Transition(string pattern, string replacement, List<HeadMovement> movement, State fromState,
+                           State nextState){
             Pattern = pattern;
             Replacement = replacement;
             Movement = movement;
             NextState = nextState;
             FromState = fromState;
-			AmountOfTapes = pattern.Length;
-			if (replacement.Length != AmountOfTapes || movement.Count != AmountOfTapes) {
-				throw new ArgumentException("The amounts of tapes required differes among the input variables.");
-			}
+            AmountOfTapes = pattern.Length;
+            if (replacement.Length != AmountOfTapes || movement.Count != AmountOfTapes) {
+                throw new ArgumentException("The amounts of tapes required differes among the input variables.");
+            }
         }
 
+        [DataMember(Name = "Pattern")]
         public string Pattern {get;}
+
+        [DataMember(Name = "Replacement")]
         public string Replacement {get;}
+
+        [DataMember(Name = "Move")]
         public List<HeadMovement> Movement {get;}
+
+        [DataMember(Name = "From")]
         public State FromState {get;}
+
+        [DataMember(Name = "To")]
         public State NextState {get;}
+
+        [DataMember(Name = "AmountOfTapes")]
+        public int AmountOfTapes {get;}
 
         public bool IsMatch(List<TuringTape> tapes){
             return Regex.IsMatch(new string(tapes.ConvertAll(t => t.Read()).ToArray()), Pattern.Replace('*', '.'));
         }
 
-        public static Condition Parse(string input, State fromState, State nextState){
+        public static Transition Parse(string input, State fromState, State nextState){
             var mtch = Regex.Match(input, "^(?<Read>.+?)/(?<Replace>.+?),(?<Move>(L|R|S)+)$");
             var pattern = mtch.Groups["Read"].Value;
             var replace = mtch.Groups["Replace"].Value;
@@ -48,7 +62,7 @@ namespace ThinnestTuring
                         break;
                 }
             }
-            return new Condition(pattern, replace, move, fromState, nextState);
+            return new Transition(pattern, replace, move, fromState, nextState);
         }
 
         public State Apply(List<TuringTape> tapes){
@@ -57,15 +71,15 @@ namespace ThinnestTuring
             var index = 1;
             foreach (var c in Replacement.ToCharArray()) {
                 if (c == '*') {
-					replace += "$" + index+",";
-					index++;
+                    replace += "$" + index + ",";
+                    index++;
                     continue;
-				}
-				index++;
-				replace += c+",";
+                }
+                index++;
+                replace += c + ",";
             }
-			var newKonf = Regex.Replace(new string(tapes.ConvertAll(t => t.Read()).ToArray()), pattern, replace);
-			newKonf = newKonf.Replace(",", "");
+            var newKonf = Regex.Replace(new string(tapes.ConvertAll(t => t.Read()).ToArray()), pattern, replace);
+            newKonf = newKonf.Replace(",", "");
             for (var i = 0; i < tapes.Count; i++) {
                 switch (Movement[i]) {
                     case HeadMovement.Left:
@@ -82,8 +96,6 @@ namespace ThinnestTuring
             return NextState;
         }
 
-		public int AmountOfTapes {get; private set;}
-
         public string GetCondition(){
             var pattern = string.Join(string.Empty, Pattern);
             var replace = string.Join(string.Empty, Replacement);
@@ -92,15 +104,16 @@ namespace ThinnestTuring
         }
 
         public string ToLaTeX(){
-			if (NextState.Equals(FromState)) {//{${1}$} ({0})
-				return string.Format("({0}) edge[out=80,in=100,loop] node[above]{1} ({0})", FromState, "{$"+GetCondition()+"$}");
+            if (NextState.Equals(FromState)) { //{${1}$} ({0})
+                return string.Format("({0}) edge[out=80,in=100,loop] node[above]{1} ({0})", FromState,
+                    "{$" + GetCondition() + "$}");
             }
             return string.Format("({0}) edge node[above]{1} ({2})", FromState, "{$" + GetCondition() + "$}", NextState);
         }
 
-        public static List<Condition> FromLaTeX(string input, List<State> states){
+        public static List<Transition> FromLaTeX(string input, List<State> states){
             //(q1) edge node[above]{$b/e,R$} (q4)
-            var conds = new List<Condition>();
+            var conds = new List<Transition>();
             foreach (Match mtch in Regex.Matches(input,
                 @"\((?<fromState>q.+?)\)[ ]*edge.*?node.*?\{\$(?<condition>.+?)\$\}[ ]*\((?<toState>q.+?)\)",
                 RegexOptions.Singleline | RegexOptions.IgnoreCase)) {
@@ -111,8 +124,8 @@ namespace ThinnestTuring
                 if (fromState == null || toState == null) {
                     throw new Exception(string.Format("Couldn'd find either {0} or {1} in states.", from, to));
                 }
-                fromState.AddCondition(mtch.Groups["condition"].Value,toState);
-                conds.Add(fromState.Conditions.Last());
+                fromState.AddTransition(mtch.Groups["condition"].Value, toState);
+                conds.Add(fromState.Transitions.Last());
             }
             return conds;
         }

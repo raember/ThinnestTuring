@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,16 +11,38 @@ namespace ThinnestTuring
             Console.OutputEncoding = Encoding.UTF8;
             Console.InputEncoding = Encoding.UTF8;
             Console.WriteLine("THE TURING TEST");
+            Console.WriteLine("===============");
+            Console.WriteLine();
+            Console.WriteLine("Bitte wählen zwischen Step-Modus[s] und Run-Modus[r]:");
+            var doRun = false;
+            var correctInput = false;
+            while (!correctInput) {
+                var modeInput = Console.ReadLine().ToLower();
+                correctInput = true;
+                switch (modeInput) {
+                    case "r":
+                        doRun = true;
+                        Console.WriteLine("RUN-Modus gewählt.");
+                        break;
+                    case "s":
+                        Console.WriteLine("STEP-Modus gewählt.");
+                        break;
+                    default:
+                        correctInput = false;
+                        Console.WriteLine("Bitte entweder [s] oder [r] eingeben:");
+                        break;
+                }
+            }
             while (true) {
-                Console.WriteLine("===============");
-                Console.WriteLine();
                 Console.WriteLine("Bitte ein Wort angeben.");
                 //var states = CreateStates();
-				var TM = new TuringMachine();
-				CreateImprovedUnaryMultiplicationStates(TM);
-				TM.Prepare();
+                var TM = new TuringMachine();
+                if (doRun) { TM.Mode = TuringMode.Run; }
+                CreateImprovedUnaryMultiplicationStates(TM);
+                TM.Initialize();
                 //TM.Mode = TuringMode.Run;
                 var input = Console.ReadLine();
+                if ("exit".Equals(input) || "quit".Equals(input)) { return; }
                 Console.WriteLine("...Teste auf unäre Multiplikation...");
                 var reg = Regex.Match(input, "(0*)1(0*)");
                 var int1 = reg.Groups[1].Value.Length;
@@ -31,245 +52,91 @@ namespace ThinnestTuring
                 if (TM.Compute(input)) {
                     Console.WriteLine("Das Wort gehört zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);
-					Console.WriteLine("Resultat: {0}",TM.Tapes.Last().tape.Count(c => c.Equals('0')));
-					Console.WriteLine("===============");
-					Console.WriteLine("===============");
+                    var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
+                    Console.WriteLine("Resultat: {0}, Erwartet: {1}, Match: {2}", resultCalc, res, resultCalc == res);
+                    Console.WriteLine("===============");
                 } else {
                     Console.WriteLine("Das Wort gehört nicht zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);
                 }
             }
-		}
+        }
 
-		private static void CreateUnaryMultiplicationStates(TuringMachine tm){
-			var Q0 = tm.CreateState();
-			var Q1 = tm.CreateState();
-			var Q2 = tm.CreateState();
-			var Q3 = tm.CreateState();
-			var QE = tm.CreateAcceptingState();
+        private static void CreateUnaryMultiplicationStates(TuringMachine tm){
+            var Q0 = tm.CreateState();
+            var Q1 = tm.CreateState();
+            var Q2 = tm.CreateState();
+            var Q3 = tm.CreateState();
+            var QE = tm.CreateAcceptingState();
 
-			// q0: Übertrage ersten Faktor auf Band 2
-			Q0.AddCondition("0**/_0*,RLS", Q0);
-			Q0.AddCondition("1**/_**,RRS", Q1);
+            // q0: Übertrage ersten Faktor auf Band 2
+            Q0.AddTransition("0**/_0*,RLS", Q0);
+            Q0.AddTransition("1**/_**,RRS", Q1);
 
-			// q1: Überprüfe, ob noch eine Stelle des ersten Faktors zu verarbeiten ist
-			Q1.AddCondition("0**/0**,RSS", Q2);
-			Q1.AddCondition("_**/_**,SSS", QE);
+            // q1: Überprüfe, ob noch eine Stelle des ersten Faktors zu verarbeiten ist
+            Q1.AddTransition("0**/0**,RSS", Q2);
+            Q1.AddTransition("_**/_**,SSS", QE);
 
-			// q2: Addiere Band 2 auf Band 3
-			Q2.AddCondition("*0_/*00,SRR", Q2);
-			Q2.AddCondition("*_*/*_*,SLS", Q3);
+            // q2: Addiere Band 2 auf Band 3
+            Q2.AddTransition("*0_/*00,SRR", Q2);
+            Q2.AddTransition("*_*/*_*,SLS", Q3);
 
-			// q3: Rücke zum Anfang des ersten Faktors
-			Q3.AddCondition("*0*/*0*,SLS", Q3);
-			Q3.AddCondition("*_*/*_*,SRS", Q1);
-		}
+            // q3: Rücke zum Anfang des ersten Faktors
+            Q3.AddTransition("*0*/*0*,SLS", Q3);
+            Q3.AddTransition("*_*/*_*,SRS", Q1);
+        }
 
-		private static void CreateImprovedUnaryMultiplicationStates(TuringMachine tm){
-			var Q0 = tm.CreateState();
-			var Q1ZeroTimes = tm.CreateState();
-			var Q2Times = tm.CreateState();
-			var Q3Times = tm.CreateState();
-			var Q4 = tm.CreateState();
-			var Q5 = tm.CreateState();
-			var QE = tm.CreateAcceptingState();
+        private static void CreateImprovedUnaryMultiplicationStates(TuringMachine tm){
+            var Q0 = tm.CreateState();
+            var Q1OnePlusTimesX = tm.CreateState();
+            var Q2OneTimesX = tm.CreateState();
+            var Q3YTimesX = tm.CreateState();
+            var Q4YTimesX = tm.CreateState();
+            var Q5 = tm.CreateState();
+            var Q6YTimesOne = tm.CreateState();
+            var Q7FromLeft = tm.CreateState();
+            var Q8FromRight = tm.CreateState();
+            var QE = tm.CreateAcceptingState();
 
+            //0*x=0
+            Q0.AddTransition("1**/1**,SSS", QE);
 
-			//Does the word begin with a 1?
-			Q0.AddCondition("1**/1**,RSS", Q1ZeroTimes);
+            //1*x=x
+            Q0.AddTransition("0**/_0*,RLS", Q1OnePlusTimesX);
+            Q1OnePlusTimesX.AddTransition("1**/_**,RSL", Q2OneTimesX);
+            Q2OneTimesX.AddTransition("0**/0*0,RSL");
+            Q2OneTimesX.AddTransition("_**/_**,SSR", QE);
 
-			//Does the word begin with 1 and end with 0's?
-			Q1ZeroTimes.AddCondition("0**/0**,RSS", Q1ZeroTimes);
-			Q1ZeroTimes.AddCondition("_**/_**,SSS", QE);
+            //y*x  --  1 not yet consumed.
+            Q1OnePlusTimesX.AddTransition("0**/_0*,RLS", Q3YTimesX);
+            Q3YTimesX.AddTransition("0**/_0*,RLS");
+            Q3YTimesX.AddTransition("1**/_**,RSS", Q4YTimesX);
 
+            //y*0=0
+            Q4YTimesX.AddTransition("_**/_**,SSS", QE);
 
-			//Does the word begin with a 0?
-			Q0.AddCondition("0**/_0*,RLS", Q2Times);
-			Q2Times.AddCondition("0**/_0*,RLS", Q2Times);
-			Q2Times.AddCondition("1**/_**,RRS", Q3Times);
+            //y*(1+?)
+            Q4YTimesX.AddTransition("0_*/0_*,RRS", Q5);
 
-			//is the second factor zero?
-			Q3Times.AddCondition("_**/_**,SSS", QE);
+            //y*1=y
+            Q5.AddTransition("_**/_**,SSS", Q6YTimesOne);
+            Q6YTimesOne.AddTransition("*0*/*00,SRL");
+            Q6YTimesOne.AddTransition("*_*/*_*,SLR", QE);
 
-			//START MULTIPLICATION:
+            //Trivial cases covered
+            //y*x| y>1 & x>1
 
-			Q3Times.AddCondition("00*/000,RRL", Q4);
-			Q4.AddCondition("*0*/*00,SRL", Q4);
-			Q4.AddCondition("0_*/0_*,RLS", Q5);
-			Q4.AddCondition("__*/__*,SSR", QE);
-			Q5.AddCondition("*0*/*00,SLL", Q5);
-			Q5.AddCondition("0_*/0_0,RRL", Q5);
-			Q5.AddCondition("__*/__*,SRR", QE);
-			//01000?????
-		}
+            Q5.AddTransition("*0*/*00,SRL", Q7FromLeft);
 
-        //private static List<State> CreateStates(){
-        //    var Q0 = new State(0);
-        //    var Q1 = new State(1);
-        //    var Q2 = new State(2);
-        //    var Q3 = new State(3);
-        //    var Q4 = new State(4);
-        //    var Q5 = new State(5);
-        //    var Q6 = new State(6);
-        //    var Q7 = new State(7);
-        //    var Q8 = new State(8);
-        //    var Q9 = new State(9);
-        //    var Q10 = new State(10);
-        //    var QE = new AcceptingState();
+            //Left 2 right
+            Q7FromLeft.AddTransition("__*/__*,SSR", QE);
+            Q7FromLeft.AddTransition("*0*/*00,SRL");
+            Q7FromLeft.AddTransition("0_*/0_*,RLS", Q8FromRight);
 
-        //    // q0
-        //    Q0.AddCondition(Q1, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteRight('a');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q1
-        //    Q1.AddCondition(Q2, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteRight('a');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-        //    Q1.AddCondition(Q8, t =>{
-        //                             if (t[0].Read().Equals(t[0].emptySlot)) {
-        //                                 t[0].WriteLeft();
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q2
-        //    Q2.AddCondition(Q2, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteRight('a');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-        //    Q2.AddCondition(Q3, t =>{
-        //                             if (t[0].Read().Equals(t[0].emptySlot)) {
-        //                                 t[0].WriteLeft();
-        //                                 return true;
-        //                             }
-        //                             if (t[0].Read().Equals('t')) {
-        //                                 t[0].WriteLeft('t');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q3
-        //    Q3.AddCondition(Q4, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteLeft('t');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q4
-        //    Q4.AddCondition(Q4, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteLeft('a');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-        //    Q4.AddCondition(Q5, t =>{
-        //                             if (t[0].Read().Equals(t[0].emptySlot)) {
-        //                                 t[0].WriteRight();
-        //                                 return true;
-        //                             }
-        //                             if (t[0].Read().Equals('t')) {
-        //                                 t[0].WriteRight('t');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q5
-        //    Q5.AddCondition(Q6, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteRight('t');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q6
-        //    Q6.AddCondition(Q7, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteRight('a');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q7
-        //    Q7.AddCondition(Q2, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteLeft('a');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-        //    Q7.AddCondition(Q8, t =>{
-        //                             if (t[0].Read().Equals('t')) {
-        //                                 t[0].WriteLeft('t');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q8
-        //    Q8.AddCondition(Q9, t =>{
-        //                             if (t[0].Read().Equals('a')) {
-        //                                 t[0].WriteRight('x');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-
-        //    // q9
-        //    Q9.AddCondition(Q9, t =>{
-        //                             if (t[0].Read().Equals('t')) {
-        //                                 t[0].WriteRight('t');
-        //                                 return true;
-        //                             }
-        //                             return false;
-        //                         });
-        //    Q9.AddCondition(Q10, t =>{
-        //                              if (t[0].Read().Equals(t[0].emptySlot)) {
-        //                                  t[0].WriteLeft();
-        //                                  return true;
-        //                              }
-        //                              return false;
-        //                          });
-
-        //    // q10
-        //    Q10.AddCondition(Q10, t =>{
-        //                               if (t[0].Read().Equals('x')) {
-        //                                   t[0].WriteLeft('x');
-        //                                   return true;
-        //                               }
-        //                               if (t[0].Read().Equals('t')) {
-        //                                   t[0].WriteLeft('a');
-        //                                   return true;
-        //                               }
-        //                               return false;
-        //                           });
-        //    Q10.AddCondition(QE, t =>{
-        //                              if (t[0].Read().Equals(t[0].emptySlot)) {
-        //                                  t[0].WriteRight();
-        //                                  return true;
-        //                              }
-        //                              return false;
-        //                          });
-        //    return new[]{Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, QE}.ToList();
-        //}
+            //Right 2 left
+            Q8FromRight.AddTransition("__*/__*,SSR", QE);
+            Q8FromRight.AddTransition("*0*/*00,SLL");
+            Q8FromRight.AddTransition("0_*/0_*,RRS", Q7FromLeft);
+        }
     }
 }
