@@ -53,7 +53,14 @@ namespace ThinnestTuring
                     Console.WriteLine("Das Wort gehört zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);
                     var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
-                    Console.WriteLine("Resultat: {0}, Erwartet: {1}, Match: {2}", resultCalc, res, resultCalc == res);
+                    Console.Write("Resultat: {0}, Erwartet: {1}, Match: ", resultCalc, res);
+					var match = (resultCalc == res);
+					Console.ForegroundColor = ConsoleColor.Red;
+					if (match) {
+						Console.ForegroundColor = ConsoleColor.Green;
+					}
+					Console.WriteLine(match);
+					Console.ResetColor();
                     Console.WriteLine("===============");
                 } else {
                     Console.WriteLine("Das Wort gehört nicht zur Sprache. Berechnung fertig. Benötigte Schritte: " +
