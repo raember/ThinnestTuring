@@ -55,6 +55,8 @@ namespace ThinnestTuring
                     var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
                     Console.WriteLine("Resultat: {0}, Erwartet: {1}, Match: {2}", resultCalc, res, resultCalc == res);
                     Console.WriteLine("===============");
+                    Console.WriteLine(TM.ToLaTeX());
+                    Console.WriteLine("===============");
                 } else {
                     Console.WriteLine("Das Wort gehört nicht zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);

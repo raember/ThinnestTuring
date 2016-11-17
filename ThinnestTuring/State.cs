@@ -1,30 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace ThinnestTuring
 {
-    [Serializable]
     public class State
     {
-        [DataMember(Name = "TikzPrefix")] private readonly string _tikzPrefix;
+        private readonly string _tikzPrefix;
 
         public State(int index, string tikzPrefix = ""){
             Index = index;
-            _tikzPrefix = tikzPrefix;
+            if (index == 0) { _tikzPrefix = "initial,"; } else { _tikzPrefix = tikzPrefix; }
             Transitions = new List<Transition>();
             AmountOfTapes = 0;
         }
 
-        [DataMember(Name = "Index")]
         public int Index {get;}
-
-        [DataMember(Name = "Transition")]
         public List<Transition> Transitions {get;}
-
-        [DataMember(Name = "AmountOfTapes")]
         public int AmountOfTapes {get; private set;}
 
         public void AddTransition(string condition, State nextState){
@@ -57,7 +50,12 @@ namespace ThinnestTuring
         }
 
         public string ToLaTeX(){ // {$q_{{3}}$};
-            return string.Format("\\node[{0}state]({2}) {3}", _tikzPrefix, this, "{$q_{" + this + "}$}");
+            return string.Format("\\node[{0}state]({1}) {2};", _tikzPrefix, this, "{$q_{" + Index + "}$}");
+        }
+
+        public string ToLaTeX(State fromState){
+            return string.Format("\\node[{0}state]({1}) [right of={2}] {3};", _tikzPrefix, this, fromState,
+                "{$q_{" + Index + "}$}");
         }
 
         public static List<State> FromLaTeX(string input){

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace ThinnestTuring
 {
-    [Serializable]
     public class TuringMachine
     {
-        [DataMember(Name = "TransitionsChecked")] private bool checkedTransitions;
+        private bool checkedTransitions;
 
         public TuringMachine(){
             Mode = TuringMode.Step;
@@ -17,19 +15,10 @@ namespace ThinnestTuring
             States = new List<State>();
         }
 
-        [DataMember(Name = "From")]
         public List<TuringTape> Tapes {get;}
-
-        [DataMember(Name = "CalculatedSteps")]
         public int CalculatedSteps {get; private set;}
-
-        [DataMember(Name = "Mode")]
         public TuringMode Mode {get; set;}
-
-        [DataMember(Name = "States")]
         public List<State> States {get;}
-
-        [DataMember(Name = "CurrentState")]
         public State CurrentState {get; set;}
 
         public bool Initialize(){
@@ -90,19 +79,26 @@ namespace ThinnestTuring
             States.Add(newState);
             return newState;
         }
-
-        //TODO: Implement LaTeX export
+        
         public string ToLaTeX(){
-            var str = string.Empty;
-            foreach (var s in States) {
-                for (var i = 0; i < s.Transitions.Count - 1; i++) {
-                    switch (i) {
-                        case 0:
-                            break;
+            var str = new List<string>();
+            if (States.Count > 0) {
+                str.Add(States.First().ToLaTeX());
+                if (States.Count > 1) {
+                    for (int i = 1; i < States.Count; i++) {
+                        str.Add(States[i].ToLaTeX(States[i - 1]));
                     }
                 }
             }
-            return null;
+            str.Add(string.Empty);
+            str.Add("\\path[->]");
+            var trans = new List<Transition>();
+            foreach (var s in States) {
+                trans.AddRange(s.Transitions);
+            }
+            str.AddRange(trans.Distinct().ToList().Select(t => t.ToLaTeX()));
+            str.Add(";");
+            return string.Join("\n", str);
         }
 
         public void print(bool final){
