@@ -103,7 +103,6 @@ namespace ThinnestTuring
 
         public void print(bool final){
             var bandN = 0;
-            var origColor = Console.ForegroundColor;
             if (Tapes.Count > 1 && !final) {
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
                 Console.WriteLine(new string('=', 2*TuringTape.TAPEPRINTOVERHEAD + 8
@@ -117,8 +116,8 @@ namespace ThinnestTuring
                 } else {
                     Console.WriteLine(new string('=', 2*TuringTape.TAPEPRINTOVERHEAD + 6
                                                       + bandN.ToString().Length + CurrentState.ToString().Length));
-                }
-                Console.ForegroundColor = origColor;
+				}
+				Console.ResetColor();
                 Console.WriteLine("Final state has been reached:");
             }
             foreach (var tape in Tapes) {
@@ -128,14 +127,14 @@ namespace ThinnestTuring
                 tape.print(CurrentState, final);
                 Console.WriteLine("]");
                 bandN++;
-            }
-            Console.ForegroundColor = origColor;
+			}
+			Console.ResetColor();
         }
-    }
-}
+	}
 
-public enum TuringMode
-{
-    Step,
-    Run
+	public enum TuringMode
+	{
+		Step,
+		Run
+	}
 }

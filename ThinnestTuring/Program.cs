@@ -38,7 +38,7 @@ namespace ThinnestTuring
                 //var states = CreateStates();
                 var TM = new TuringMachine();
                 if (doRun) { TM.Mode = TuringMode.Run; }
-                CreateImprovedUnaryMultiplicationStates(TM);
+				CreateBestUnaryMultiplicationStates(TM);
                 TM.Initialize();
                 //TM.Mode = TuringMode.Run;
                 var input = Console.ReadLine();
@@ -56,12 +56,10 @@ namespace ThinnestTuring
                     Console.Write("Resultat: {0}, Erwartet: {1}, Match: ", resultCalc, res);
 					var match = (resultCalc == res);
 					Console.ForegroundColor = ConsoleColor.Red;
-					if (match) {
-						Console.ForegroundColor = ConsoleColor.Green;
-					}
+					if (match) {Console.ForegroundColor = ConsoleColor.Green;}
 					Console.WriteLine(match);
 					Console.ResetColor();
-                    Console.WriteLine("===============");
+					Console.WriteLine("===============");
                     Console.WriteLine(TM.ToLaTeX());
                     Console.WriteLine("===============");
                 } else {
@@ -147,5 +145,58 @@ namespace ThinnestTuring
             Q8FromRight.AddTransition("*0*/*00,SLL");
             Q8FromRight.AddTransition("0_*/0_*,RRS", Q7FromLeft);
         }
+
+		private static void CreateBestUnaryMultiplicationStates(TuringMachine tm) {
+			var Q0 = tm.CreateState();
+			var Q1OnePlusTimesX = tm.CreateState();
+			var Q2OneTimesX = tm.CreateState();
+			var Q3YTimesX = tm.CreateState();
+			var Q4YTimesX = tm.CreateState();
+			var Q5 = tm.CreateState();
+			var Q6YTimesOne = tm.CreateState();
+			var Q7 = tm.CreateState();
+			var Q8 = tm.CreateState();
+			var Q9 = tm.CreateState();
+			var Q10 = tm.CreateState();
+			var QE = tm.CreateAcceptingState();
+
+			//0*x=0
+			Q0.AddTransition("1**/1**,SSS", QE);
+
+			//1*x=x
+			Q0.AddTransition("0**/_1*,RLS", Q1OnePlusTimesX);
+			Q1OnePlusTimesX.AddTransition("1**/_**,RSL", Q2OneTimesX);
+			Q2OneTimesX.AddTransition("0**/0*0,RSL");
+			Q2OneTimesX.AddTransition("_**/_**,SSR", QE);
+
+			//y*x  --  1 not yet consumed.
+			Q1OnePlusTimesX.AddTransition("0**/_0*,RLS", Q3YTimesX);
+			Q3YTimesX.AddTransition("0**/_0*,RLS");
+			Q3YTimesX.AddTransition("1**/_**,RRS", Q4YTimesX);
+
+			//y*0=0
+			Q4YTimesX.AddTransition("_**/_**,SSS", QE);
+
+			//y*(1+?)
+			Q4YTimesX.AddTransition("00*/010,RRL", Q5);
+
+			//y*1=y
+			Q5.AddTransition("_**/_**,SSS", Q6YTimesOne);
+			Q6YTimesOne.AddTransition("*0*/*00,SRL");
+			Q6YTimesOne.AddTransition("*1*/*10,SRL", QE);
+
+			//Trivial cases covered
+			//y*x| y>1 & x>1
+			Q5.AddTransition("00*/000,SRL");
+			Q5.AddTransition("01*/010,SSL", Q9);
+			Q7.AddTransition("01*/010,RRL", Q8);
+			Q7.AddTransition("_1*/_1*,SRR", QE);
+			Q8.AddTransition("*0*/*00,SRL");
+			Q8.AddTransition("*1*/*10,SSL", Q9);
+			Q9.AddTransition("01*/010,RLL", Q10);
+			Q9.AddTransition("_1*/_1*,SRR", QE);
+			Q10.AddTransition("*0*/*00,SLL");
+			Q10.AddTransition("*1*/*10,SSL", Q7);
+		}
     }
 }

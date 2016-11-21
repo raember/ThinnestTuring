@@ -58,7 +58,6 @@ namespace ThinnestTuring
         }
 
         public void print(State state, bool final){
-            var origColor = Console.ForegroundColor;
             var minIndex = headPosition - TAPEPRINTOVERHEAD;
             var maxIndex = headPosition + TAPEPRINTOVERHEAD;
             for (var index = minIndex; index < maxIndex; index++) {
@@ -91,7 +90,7 @@ namespace ThinnestTuring
                     Console.Write('_');
                 }
             }
-            Console.ForegroundColor = origColor;
+			Console.ResetColor();
         }
 
         public override string ToString(){
