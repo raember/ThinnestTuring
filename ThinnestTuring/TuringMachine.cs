@@ -79,23 +79,19 @@ namespace ThinnestTuring
             States.Add(newState);
             return newState;
         }
-        
+
         public string ToLaTeX(){
             var str = new List<string>();
             if (States.Count > 0) {
                 str.Add(States.First().ToLaTeX());
                 if (States.Count > 1) {
-                    for (int i = 1; i < States.Count; i++) {
-                        str.Add(States[i].ToLaTeX(States[i - 1]));
-                    }
+                    for (var i = 1; i < States.Count; i++) { str.Add(States[i].ToLaTeX(States[i - 1])); }
                 }
             }
             str.Add(string.Empty);
             str.Add("\\path[->]");
             var trans = new List<Transition>();
-            foreach (var s in States) {
-                trans.AddRange(s.Transitions);
-            }
+            foreach (var s in States) { trans.AddRange(s.Transitions); }
             str.AddRange(trans.Distinct().ToList().Select(t => t.ToLaTeX()));
             str.Add(";");
             return string.Join("\n", str);
@@ -103,12 +99,12 @@ namespace ThinnestTuring
 
         public void print(bool final){
             var bandN = 0;
-            if (Tapes.Count > 1 && !final) {
+            if (Tapes.Count > 1 && !final && Mode != TuringMode.Run) {
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
                 Console.WriteLine(new string('=', 2*TuringTape.TAPEPRINTOVERHEAD + 8
                                                   + bandN.ToString().Length + CurrentState.ToString().Length));
             }
-            if (final) {
+            if (final && Mode != TuringMode.Run) {
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 if (Tapes.Count > 1) {
                     Console.WriteLine(new string('=', 2*TuringTape.TAPEPRINTOVERHEAD + 9
@@ -116,9 +112,8 @@ namespace ThinnestTuring
                 } else {
                     Console.WriteLine(new string('=', 2*TuringTape.TAPEPRINTOVERHEAD + 6
                                                       + bandN.ToString().Length + CurrentState.ToString().Length));
-				}
-				Console.ResetColor();
-                Console.WriteLine("Final state has been reached:");
+                }
+                Console.ResetColor();
             }
             foreach (var tape in Tapes) {
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -127,14 +122,14 @@ namespace ThinnestTuring
                 tape.print(CurrentState, final);
                 Console.WriteLine("]");
                 bandN++;
-			}
-			Console.ResetColor();
+            }
+            Console.ResetColor();
         }
-	}
+    }
 
-	public enum TuringMode
-	{
-		Step,
-		Run
-	}
+    public enum TuringMode
+    {
+        Step,
+        Run
+    }
 }
