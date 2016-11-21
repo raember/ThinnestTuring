@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace ThinnestTuring
 {
@@ -8,21 +7,13 @@ namespace ThinnestTuring
     public sealed class TuringTape
     {
         public const int TAPEPRINTOVERHEAD = 15;
-        [DataMember(Name = "HeadPosition")] private int headPosition;
+        private int headPosition;
 
-        public TuringTape(string baseWord, char emptySlot = '_'){ //'␣' doesn't work
-            if (emptySlot.Equals('_')) { emptySlot = char.Parse("_"); }
+        public TuringTape(string baseWord = ""){ //'␣' for empty space doesn't work
             tape = new List<char>(baseWord.ToCharArray());
-            this.emptySlot = emptySlot;
         }
 
-        public TuringTape() : this(string.Empty){}
-
-        [DataMember(Name = "Tape")]
         public List<char> tape {get;}
-
-        [DataMember(Name = "EmptyChar")]
-        public char emptySlot {get;}
 
         public void WriteLeft(char write){
             WriteStay(write);
@@ -35,24 +26,22 @@ namespace ThinnestTuring
         }
 
         public void WriteLeft(){
-            WriteLeft(emptySlot);
+            WriteLeft('_');
         }
 
         public void WriteRight(){
-            WriteRight(emptySlot);
+            WriteRight('_');
         }
 
         public void WriteStay(char write){
             if (headPosition < 0) {
                 for (var amountPrefix = Math.Abs(headPosition) - 1; amountPrefix > 0; amountPrefix--) {
-                    tape.Insert(0, emptySlot);
+                    tape.Insert(0, '_');
                 }
                 tape.Insert(0, write);
                 headPosition = 0;
             } else if (headPosition >= tape.Count) {
-                for (var amountSuffix = headPosition - tape.Count; amountSuffix > 0; amountSuffix--) {
-                    tape.Add(emptySlot);
-                }
+                for (var amountSuffix = headPosition - tape.Count; amountSuffix > 0; amountSuffix--) { tape.Add('_'); }
                 tape.Add(write);
             } else {
                 tape[headPosition] = write;
@@ -60,11 +49,11 @@ namespace ThinnestTuring
         }
 
         public void WriteStay(){
-            WriteStay(emptySlot);
+            WriteStay('_');
         }
 
         public char Read(){
-            if (headPosition < 0 || headPosition >= tape.Count) { return emptySlot; }
+            if (headPosition < 0 || headPosition >= tape.Count) { return '_'; }
             return tape[headPosition];
         }
 
@@ -91,7 +80,7 @@ namespace ThinnestTuring
                     }
                 }
                 if (index >= 0 && index < tape.Count) {
-                    if (tape[index] != emptySlot) {
+                    if (tape[index] != '_') {
                         Console.ForegroundColor = ConsoleColor.White;
                     } else {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -99,7 +88,7 @@ namespace ThinnestTuring
                     Console.Write(tape[index]);
                 } else {
                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.Write(emptySlot);
+                    Console.Write('_');
                 }
             }
             Console.ForegroundColor = origColor;

@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace ThinnestTuring
 {
-    [Serializable]
     public sealed class Transition
     {
         private Transition(string pattern, string replacement, List<HeadMovement> movement, State fromState,
-                           State nextState){
+                           State toState){
             Pattern = pattern;
             Replacement = replacement;
             Movement = movement;
-            NextState = nextState;
+            ToState = toState;
             FromState = fromState;
             AmountOfTapes = pattern.Length;
             if (replacement.Length != AmountOfTapes || movement.Count != AmountOfTapes) {
@@ -22,22 +20,11 @@ namespace ThinnestTuring
             }
         }
 
-        [DataMember(Name = "Pattern")]
         public string Pattern {get;}
-
-        [DataMember(Name = "Replacement")]
         public string Replacement {get;}
-
-        [DataMember(Name = "Move")]
         public List<HeadMovement> Movement {get;}
-
-        [DataMember(Name = "From")]
         public State FromState {get;}
-
-        [DataMember(Name = "To")]
-        public State NextState {get;}
-
-        [DataMember(Name = "AmountOfTapes")]
+        public State ToState {get;}
         public int AmountOfTapes {get;}
 
         public bool IsMatch(List<TuringTape> tapes){
@@ -93,10 +80,10 @@ namespace ThinnestTuring
                         break;
                 }
             }
-            return NextState;
+            return ToState;
         }
 
-        public string GetCondition(){
+        public string GetRule(){
             var pattern = string.Join(string.Empty, Pattern);
             var replace = string.Join(string.Empty, Replacement);
             var move = string.Join(string.Empty, Movement.ConvertAll(m => m.ToString().First()));
@@ -104,11 +91,11 @@ namespace ThinnestTuring
         }
 
         public string ToLaTeX(){
-            if (NextState.Equals(FromState)) { //{${1}$} ({0})
+            if (ToState.Equals(FromState)) { //{${1}$} ({0})
                 return string.Format("({0}) edge[out=80,in=100,loop] node[above]{1} ({0})", FromState,
-                    "{$" + GetCondition() + "$}");
+                    "{$" + GetRule() + "$}");
             }
-            return string.Format("({0}) edge node[above]{1} ({2})", FromState, "{$" + GetCondition() + "$}", NextState);
+            return string.Format("({0}) edge node[above]{1} ({2})", FromState, "{$" + GetRule().Replace("_","\\_") + "$}", ToState);
         }
 
         public static List<Transition> FromLaTeX(string input, List<State> states){
@@ -131,7 +118,7 @@ namespace ThinnestTuring
         }
 
         public override string ToString(){
-            return string.Format("{0} => {1}", GetCondition(), NextState);
+            return string.Format("{0} => {1}", GetRule(), ToState);
         }
     }
 

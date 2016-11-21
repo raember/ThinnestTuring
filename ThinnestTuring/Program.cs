@@ -62,6 +62,8 @@ namespace ThinnestTuring
 					Console.WriteLine(match);
 					Console.ResetColor();
                     Console.WriteLine("===============");
+                    Console.WriteLine(TM.ToLaTeX());
+                    Console.WriteLine("===============");
                 } else {
                     Console.WriteLine("Das Wort gehört nicht zur Sprache. Berechnung fertig. Benötigte Schritte: " +
                                       TM.CalculatedSteps);
