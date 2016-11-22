@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace ThinnestTuring
 {
@@ -81,28 +82,97 @@ namespace ThinnestTuring
         }
 
         public string ToLaTeX(){
-            var str = new List<string>();
-            if (States.Count > 0) {
-                str.Add(States.First().ToLaTeX());
-                if (States.Count > 1) {
-                    for (var i = 1; i < States.Count; i++) { str.Add(States[i].ToLaTeX(States[i - 1])); }
-                }
-            }
+			var str = new List<string>();
+			var strStates = recursiveStateToLaTeX(States.First());
+
+			str.Add("\\begin{tikzpicture}[shorten >=0.5pt,node distance=3.5cm,>=latex,semithick,bend angle=15,every node/.style={font=\\footnotesize}]");
+			str.AddRange(strStates);
             str.Add(string.Empty);
             str.Add("\\path[->]");
             var trans = new List<Transition>();
             foreach (var s in States) { trans.AddRange(s.Transitions); }
             str.AddRange(trans.Distinct().ToList().Select(t => t.ToLaTeX()));
             str.Add(";");
+			str.Add("\\end{tikzpicture}");
             return string.Join("\n", str);
-        }
+		}
+
+		private List<string> recursiveStateToLaTeX(State from) {
+			var str = new List<string>();
+			var transitions = from.Transitions.Where(t => !t.FromState.Equals(t.ToState)).ToList();
+			var transEn = transitions.GetEnumerator();
+			var count = transitions.Count;
+			if (!transitions.Any()) {
+				return str;
+			}
+			while (transEn.MoveNext()) {
+				var to = transEn.Current.ToState;
+				switch (count) {
+					case 1:
+						str.Add(to.ToLaTeX(from, "right"));
+						break;
+					case 2:
+						str.Add(to.ToLaTeX(from, "above right"));
+						break;
+					case 3:
+						str.Add(to.ToLaTeX(from, "below right"));
+						break;
+					case 4:
+						str.Add(to.ToLaTeX(from, "above"));
+						break;
+					case 5:
+						str.Add(to.ToLaTeX(from, "below"));
+						break;
+					case 6:
+						str.Add(to.ToLaTeX(from, "above left"));
+						break;
+					case 7:
+						str.Add(to.ToLaTeX(from, "below left"));
+						break;
+					default:
+						str.Add(to.ToLaTeX(from, "right"));
+						break;
+				}
+				str.AddRange(recursiveStateToLaTeX(to));
+				count--;
+			}
+			return str;
+		}
+
+		public void ToLaTeXDocument(string filename = "output.tex") {
+			var path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().FullName), filename);
+			using (var strWrtr = new StreamWriter(new FileStream(path, FileMode.Create))) {
+				strWrtr.WriteLine("\\documentclass{standalone}");
+
+				strWrtr.WriteLine("\\usepackage[utf8]{inputenc}");
+				strWrtr.WriteLine("\\usepackage[german]{babel}");
+				strWrtr.WriteLine("\\usepackage[T1]{fontenc}");
+				strWrtr.WriteLine("\\usepackage{amsmath}");
+				strWrtr.WriteLine("\\usepackage{amsfonts}");
+				strWrtr.WriteLine("\\usepackage{amssymb}");
+				strWrtr.WriteLine("\\usepackage{graphicx}");
+				strWrtr.WriteLine("\\usepackage{pifont}");
+				strWrtr.WriteLine("\\usepackage[normalem]{ulem}");
+				strWrtr.WriteLine("\\usepackage{tikz}");
+				strWrtr.WriteLine("\\usetikzlibrary{automata,arrows,decorations.pathreplacing}");
+				strWrtr.WriteLine("\\usepackage{tikz}");
+				strWrtr.WriteLine("\\tikzstyle{automat}=[>=triangle 45,node distance=5cm,auto]");
+				strWrtr.WriteLine("\\tikzstyle{every initial by arrow}=[initial text={}]");
+				strWrtr.WriteLine("\\tikzstyle{every state}=[semithick]");
+				strWrtr.WriteLine("\\tikzstyle{accepting by double}=[double distance=.5mm,outer sep=.3pt+.25mm]");
+				strWrtr.WriteLine("\\tikzstyle{state}=[draw,circle,fill=white,minimum size=23pt,font=\\small]");
+				strWrtr.WriteLine("\\begin{document}");
+				strWrtr.WriteLine(ToLaTeX());
+				strWrtr.Write("\\end{document}");
+			}
+		}
 
         public void print(bool final){
-            var bandN = 0;
+            var tapeN = 0;
             if (Tapes.Count > 1 && !final && Mode != TuringMode.Run) {
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
                 Console.WriteLine(new string('=', 2*TuringTape.TAPEPRINTOVERHEAD + 8
-                                                  + bandN.ToString().Length + CurrentState.ToString().Length));
+                                                  + tapeN.ToString().Length + CurrentState.ToString().Length));
             }
             if (final && Mode != TuringMode.Run) {
                 Console.ForegroundColor = ConsoleColor.Cyan;
@@ -111,17 +181,17 @@ namespace ThinnestTuring
                                                       + CurrentState.ToString().Length));
                 } else {
                     Console.WriteLine(new string('=', 2*TuringTape.TAPEPRINTOVERHEAD + 6
-                                                      + bandN.ToString().Length + CurrentState.ToString().Length));
+                                                      + tapeN.ToString().Length + CurrentState.ToString().Length));
                 }
                 Console.ResetColor();
             }
             foreach (var tape in Tapes) {
                 Console.ForegroundColor = ConsoleColor.Gray;
-                if (Tapes.Count > 1) { Console.Write("Band " + bandN + ":"); }
+                if (Tapes.Count > 1) { Console.Write("Tape " + tapeN + ":"); }
                 Console.Write("[");
                 tape.print(CurrentState, final);
                 Console.WriteLine("]");
-                bandN++;
+                tapeN++;
             }
             Console.ResetColor();
         }

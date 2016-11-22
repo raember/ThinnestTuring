@@ -45,8 +45,9 @@ namespace ThinnestTuring
         }
 
         public string ToLaTeX(State fromState, string direction){ // {$q_{{2}}$};
-            return string.Format("\\node[{0}state]({2})[{4} of = {1}] {3}",
-                _tikzPrefix, this, fromState, Index, "{$q_{" + this + "}$}", direction);
+			var indx = (this is AcceptingState) ? "e" : Index.ToString();
+			return string.Format("\\node[{0}state]({2})[{4} of = {1}] {3};",
+				_tikzPrefix, fromState, this, "{$q_{" + indx + "}$}", direction);
         }
 
         public string ToLaTeX(){ // {$q_{{3}}$};
