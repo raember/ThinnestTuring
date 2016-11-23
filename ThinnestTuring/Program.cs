@@ -58,7 +58,8 @@ namespace ThinnestTuring
 						break;
 					default:
 						Console.WriteLine("Do you wish a LaTeX output?(writes into \"output.tex\") [y/n]:");
-						break;
+				        correctOutput = false;
+				        break;
 				}
 			}
 			TuringMachine TM = null;
@@ -66,7 +67,7 @@ namespace ThinnestTuring
                 if (!isExternal) { Console.WriteLine("Please enter a word."); }
                 TM = new TuringMachine();
                 if (doRun) { TM.Mode = TuringMode.Run; }
-                CreateULTIMATEUnaryMultiplicationStates(TM);
+                CreateUltimateUnaryMultiplicationStates(TM);
                 TM.Initialize();
 
                 if (!isExternal) { inputWord = Console.ReadLine(); }
@@ -225,7 +226,7 @@ namespace ThinnestTuring
             Q10.AddTransition("_1*/_10,SRL", QE);
         }
 
-        private static void CreateULTIMATEUnaryMultiplicationStates(TuringMachine tm){
+        private static void CreateUltimateUnaryMultiplicationStates(TuringMachine tm){
             var Q0 = tm.CreateState();
             var Q1 = tm.CreateState();
             var Q2 = tm.CreateState();
@@ -240,13 +241,13 @@ namespace ThinnestTuring
             var QE = tm.CreateAcceptingState();
 
             //0*x=0
-            Q0.AddTransition("1**/1**,RSS", Q1);
+            Q0.AddTransition("1**/_**,RSS", Q1);
             Q1.AddTransition("0**/0**,RSS");
-            Q1.AddTransition("_**/_**,LSS", QE);
+            Q1.AddTransition("_**/_**,SSS", QE);
 
             //1*x=x
             Q0.AddTransition("0**/_1*,RLS", Q2);
-            Q2.AddTransition("1**/1**,RSS", Q3);
+            Q2.AddTransition("1**/_**,RSS", Q3);
             Q3.AddTransition("0**/0*0,RSL");
             Q3.AddTransition("_**/_**,SRR", QE);
 
@@ -264,23 +265,24 @@ namespace ThinnestTuring
             Q5.AddTransition("00*/01*,RSS", Q7);
 
             //y*1=y
-            Q5.AddTransition("_**/_**,SSS", Q6);
-            Q6.AddTransition("*0*/*00,SRL");
-            Q6.AddTransition("*1*/*10,SRS", QE);
+//            Q5.AddTransition("_**/_**,SSS", Q6);
+//            Q6.AddTransition("*0*/*00,SRL");
+//            Q6.AddTransition("*1*/*10,SRS", QE);
 
             //Trivial cases covered
             //y*x| y>1 & x>1
-            Q5.AddTransition("00*/000,SRL");
-            Q5.AddTransition("01*/010,SSL", Q9);
+//            Q5.AddTransition("00*/000,SRL");
+//            Q5.AddTransition("01*/010,SSL", Q9);
             Q7.AddTransition("01*/010,RRL", Q8);
-            Q7.AddTransition("_1*/_1*,SRR", QE);
+            Q7.AddTransition("_1*/_1*,SSR", QE);
             Q8.AddTransition("*0*/*00,SRL");
-            Q8.AddTransition("*1*/*10,SSL", Q9);
+            Q8.AddTransition("01*/010,SSL", Q9);
+            Q8.AddTransition("_1*/_10,SRS", QE);
             Q9.AddTransition("01*/010,RLL", Q10);
             Q9.AddTransition("_1*/_1*,SRR", QE);
             Q10.AddTransition("*0*/*00,SLL");
             Q10.AddTransition("01*/*10,SSL", Q7);
-            Q10.AddTransition("_1*/_10,SRS", QE);
+            Q10.AddTransition("_1*/_10,SSS", QE);
         }
     }
 }

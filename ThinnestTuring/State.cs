@@ -27,7 +27,7 @@ namespace ThinnestTuring
                 return;
             }
             if (Transitions.Any(c => c.AmountOfTapes != AmountOfTapes)) {
-                throw new ArgumentException("The amounts of tapes required differes among the conditions.");
+                throw new ArgumentException("The amounts of tapes required differs among the conditions.");
             }
         }
 

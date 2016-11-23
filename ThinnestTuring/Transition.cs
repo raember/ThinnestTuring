@@ -93,7 +93,7 @@ namespace ThinnestTuring
         public string ToLaTeX(){
             if (ToState.Equals(FromState)) { //{${1}$} ({0})
                 return string.Format("({0}) edge[out=80,in=100,loop] node[above]{1} ({0})", FromState,
-                    "{$" + GetRule() + "$}");
+                    "{$" + GetRule().Replace("_","\\_") + "$}");
             }
             return string.Format("({0}) edge node[above]{1} ({2})", FromState, "{$" + GetRule().Replace("_","\\_") + "$}", ToState);
         }

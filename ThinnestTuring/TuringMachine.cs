@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 
 namespace ThinnestTuring
 {
@@ -28,6 +29,7 @@ namespace ThinnestTuring
                 for (var i = 0; i < amountOfTapes; i++) { Tapes.Add(new TuringTape()); }
                 checkedTransitions = true;
             }
+            yetToWriteStates.AddRange(States);
             return checkedTransitions;
         }
 
@@ -62,7 +64,6 @@ namespace ThinnestTuring
             }
             var accepted = (CurrentState is AcceptingState);
             if (!accepted) { CurrentState = new DroppingState(int.MinValue); }
-            ;
             print(true);
             return (accepted);
         }
@@ -83,9 +84,12 @@ namespace ThinnestTuring
 
         public string ToLaTeX(){
 			var str = new List<string>();
-			var strStates = recursiveStateToLaTeX(States.First());
+            var startState = States.First();
+            yetToWriteStates.Remove(startState);
+            var strStates = recursiveStateToLaTeX(startState);
+            strStates.Insert(0, startState.ToLaTeX());
 
-			str.Add("\\begin{tikzpicture}[shorten >=0.5pt,node distance=3.5cm,>=latex,semithick,bend angle=15,every node/.style={font=\\footnotesize}]");
+            str.Add("\\begin{tikzpicture}[shorten >=0.5pt,node distance=3.5cm,>=latex,semithick,bend angle=15,every node/.style={font=\\footnotesize}]");
 			str.AddRange(strStates);
             str.Add(string.Empty);
             str.Add("\\path[->]");
@@ -97,17 +101,19 @@ namespace ThinnestTuring
             return string.Join("\n", str);
 		}
 
+        private List<State> yetToWriteStates = new List<State>();
+
 		private List<string> recursiveStateToLaTeX(State from) {
-			var str = new List<string>();
+		    var str = new List<string>();
 			var transitions = from.Transitions.Where(t => !t.FromState.Equals(t.ToState)).ToList();
-			var transEn = transitions.GetEnumerator();
-			var count = transitions.Count;
+			var count = 1;
 			if (!transitions.Any()) {
 				return str;
 			}
-			while (transEn.MoveNext()) {
-				var to = transEn.Current.ToState;
-				switch (count) {
+			foreach (var trans in transitions) {
+			    var to = trans.ToState;
+			    if (!yetToWriteStates.Contains(to)) { continue; }
+			    switch (count) {
 					case 1:
 						str.Add(to.ToLaTeX(from, "right"));
 						break;
@@ -133,8 +139,9 @@ namespace ThinnestTuring
 						str.Add(to.ToLaTeX(from, "right"));
 						break;
 				}
-				str.AddRange(recursiveStateToLaTeX(to));
-				count--;
+			    yetToWriteStates.Remove(to);
+			    str.AddRange(recursiveStateToLaTeX(to));
+				count++;
 			}
 			return str;
 		}
@@ -167,7 +174,7 @@ namespace ThinnestTuring
 			}
 		}
 
-        public void print(bool final){
+        private void print(bool final){
             var tapeN = 0;
             if (Tapes.Count > 1 && !final && Mode != TuringMode.Run) {
                 Console.ForegroundColor = ConsoleColor.DarkCyan;
