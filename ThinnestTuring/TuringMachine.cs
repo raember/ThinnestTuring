@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
+using System.Net;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using System.Text.RegularExpressions;
 
 namespace ThinnestTuring
 {
@@ -20,7 +22,7 @@ namespace ThinnestTuring
         public List<TuringTape> Tapes {get;}
         public int CalculatedSteps {get; private set;}
         public TuringMode Mode {get; set;}
-        public List<State> States {get;}
+        public List<State> States {get; private set; }
         public State CurrentState {get; set;}
 
         public bool Initialize(){
@@ -147,8 +149,8 @@ namespace ThinnestTuring
 		}
 
 		public void ToLaTeXDocument(string filename = "output.tex") {
-			var path = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().FullName), filename);
-			using (var strWrtr = new StreamWriter(new FileStream(path, FileMode.Create))) {
+		    var file = new FileInfo(filename);
+			using (var strWrtr = new StreamWriter(file.Create())) {
 				strWrtr.WriteLine("\\documentclass{standalone}");
 
 				strWrtr.WriteLine("\\usepackage[utf8]{inputenc}");
@@ -173,6 +175,20 @@ namespace ThinnestTuring
 				strWrtr.Write("\\end{document}");
 			}
 		}
+
+        public static TuringMachine FromLaTeXDocument(string filename)
+        {
+            var file = new FileInfo(filename);
+            if (!file.Exists) { return null; }
+            var content = Regex.Match(File.ReadAllText(file.FullName),
+                @"\\begin\{tikzpicture\}.*?\\end\{tikzpicture\}", RegexOptions.Singleline).Value;
+            var states = State.FromLaTeX(content);
+            Transition.FromLaTeX(content, states);
+            var tm = new TuringMachine();
+            tm.States = states;
+            tm.CurrentState = tm.States.First();
+            return tm;
+        }
 
         private void print(bool final){
             var tapeN = 0;

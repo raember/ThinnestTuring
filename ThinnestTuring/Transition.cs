@@ -98,23 +98,20 @@ namespace ThinnestTuring
             return string.Format("({0}) edge node[above]{1} ({2})", FromState, "{$" + GetRule().Replace("_","\\_") + "$}", ToState);
         }
 
-        public static List<Transition> FromLaTeX(string input, List<State> states){
+        public static void FromLaTeX(string input, List<State> states){
             //(q1) edge node[above]{$b/e,R$} (q4)
-            var conds = new List<Transition>();
             foreach (Match mtch in Regex.Matches(input,
-                @"\((?<fromState>q.+?)\)[ ]*edge.*?node.*?\{\$(?<condition>.+?)\$\}[ ]*\((?<toState>q.+?)\)",
+				@"\((?<fromState>q(\d+|e|e\d+)+?)\)[ ]*edge.*?node.*?\{\$(?<condition>.+?)\$\}[ ]*\((?<toState>q.+?)\)",
                 RegexOptions.Singleline | RegexOptions.IgnoreCase)) {
                 var from = mtch.Groups["fromState"].Value;
                 var fromState = states.FirstOrDefault(s => s.ToString().Equals(from));
                 var to = mtch.Groups["toState"].Value;
                 var toState = states.FirstOrDefault(s => s.ToString().Equals(to));
                 if (fromState == null || toState == null) {
-                    throw new Exception(string.Format("Couldn'd find either {0} or {1} in states.", from, to));
+                    throw new Exception(string.Format("Couldn't find either {0} or {1} in states.", from, to));
                 }
-                fromState.AddTransition(mtch.Groups["condition"].Value, toState);
-                conds.Add(fromState.Transitions.Last());
+				fromState.AddTransition(mtch.Groups["condition"].Value.Replace("\\", ""), toState);
             }
-            return conds;
         }
 
         public override string ToString(){

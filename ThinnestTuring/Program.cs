@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CommandLine;
 
 namespace ThinnestTuring
 {
@@ -11,10 +12,14 @@ namespace ThinnestTuring
         private static TuringMachine TM = new TuringMachine();
         private static bool modeSet;
         private static TuringMode mode = TuringMode.Step;
-        private static bool latexOutputSet;
 
         public static void Main(string[] args)
         {
+            var cmnd = new CommandLineOption();
+            if (Parser.Default.ParseArguments(args, cmnd)) {
+
+            }
+
             MainAsync(args).Wait();
         }
 
@@ -23,21 +28,44 @@ namespace ThinnestTuring
             var outputLaTeX = false;
             var loop = true;
             var loopOnlyOnce = false;
+            var latexFileInputSet = false;
+            var latexFileInput = "output.tex";
+            var latexFileOutputSet = false;
+            var latexFileOutput = "output.tex";
+            var latexSet = false;
             foreach (var arg in args) {
                 switch (arg) {
-                    case "-s":
+                    case "-s": case "-step":
                         EnterStepMode();
+                        latexFileInputSet = false;
+                        latexFileOutputSet = false;
                         break;
-                    case "-r":
+                    case "-r": case "-run":
                         EnterRunMode();
+                        latexFileInputSet = false;
+                        latexFileOutputSet = false;
                         break;
-                    case "-latex":
+                    case "-latexin": case "-in":
                         outputLaTeX = true;
-                        latexOutputSet = true;
+                        latexFileInputSet = true;
+                        latexFileOutputSet = false;
+                        break;
+                    case "-latexout": case "-out":
+                        outputLaTeX = true;
+                        latexFileInputSet = false;
+                        latexFileOutputSet = true;
                         break;
                     default:
-                        latexOutputSet = true;
-                        inputWord = arg;
+                        latexSet = latexSet || latexFileInputSet || latexFileOutputSet;
+                        if (latexFileInputSet) {
+                            latexFileInput = arg;
+                            latexFileInputSet = false;
+                        } else if (latexFileOutputSet) {
+                            latexFileOutput = arg;
+                            latexFileOutputSet = false;
+                        } else {
+                            inputWord = arg;
+                        }
                         break;
                 }
                 loopOnlyOnce = true;
@@ -54,7 +82,7 @@ namespace ThinnestTuring
                     var modeInput = Console.ReadLine();
                     if (string.IsNullOrEmpty(modeInput)){modeInput = string.Empty;}
                     switch (modeInput.ToLower()) {
-                        case "r":
+                        case "r": case "run":
                             EnterRunMode();
                             Console.WriteLine("Entered RUN mode.");
                             break;
@@ -68,22 +96,22 @@ namespace ThinnestTuring
                     }
                 }
             }
-            var correctOutput = latexOutputSet;
-            if (!latexOutputSet) {
-				Console.WriteLine("Do you wish a LaTeX output?(writes into \"output.tex\") [y/n]:");
+            var correctOutput = latexFileOutputSet;
+            if (!latexSet && !args.Any()) {
+				Console.WriteLine("Do you wish a LaTeX output?(writes into {0}) [y/n]:", latexFileOutput);
                 while (!correctOutput) {
                     var modeInput = Console.ReadLine().ToLower();
                     correctOutput = true;
                     switch (modeInput) {
                         case "y":
                             outputLaTeX = true;
-                            latexOutputSet = true;
+                            latexFileOutputSet = true;
                             break;
                         case "n":
-                            latexOutputSet = true;
+                            latexFileOutputSet = true;
                             break;
                         default:
-                            Console.WriteLine("Do you wish a LaTeX output?(writes into \"output.tex\") [y/n]:");
+                            Console.WriteLine("Do you wish a LaTeX output?(writes into {0}) [y/n]:", latexFileOutput);
                             correctOutput = false;
                             break;
                     }
@@ -91,9 +119,10 @@ namespace ThinnestTuring
             }
             while (loop) {
                 if (string.IsNullOrEmpty(inputWord)) { Console.WriteLine("Please enter a word."); }
-                TM = new TuringMachine();
+//                TM = new TuringMachine();
+                TM = TuringMachine.FromLaTeXDocument(latexFileInput);
                 TM.Mode = mode;
-                CreateUltimateUnaryMultiplicationStates(TM);
+//                CreateUltimateUnaryMultiplicationStates(TM);
                 TM.Initialize();
 
                 if (string.IsNullOrEmpty(inputWord)) { inputWord = Console.ReadLine(); }
@@ -103,7 +132,8 @@ namespace ThinnestTuring
                 var int2 = reg.Groups[2].Value.Length;
                 var res = int1*int2;
 
-                var valid = await TM.ComputeAsync(inputWord);
+				var valid = await TM.ComputeAsync(inputWord);
+//				var valid = TM.Compute(inputWord);
                 Console.WriteLine();
                 var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
                 var match = (resultCalc == res);
@@ -113,9 +143,9 @@ namespace ThinnestTuring
                 Console.ForegroundColor = valid ? ConsoleColor.Green : ConsoleColor.Red;
                 Console.WriteLine(valid);
                 Console.ResetColor();
-                Console.WriteLine("Steps:".PadRight(width + whitespaceOffset) + TM.CalculatedSteps);
                 Console.WriteLine("Attempted calculation:".PadRight(width) + "{0}*{1}={2}", int1, int2, res);
                 Console.WriteLine("Calculated result:".PadRight(width + whitespaceOffset) + resultCalc);
+                Console.WriteLine("Steps:".PadRight(width + whitespaceOffset) + TM.CalculatedSteps);
                 Console.Write("Match:".PadRight(width + whitespaceOffset));
                 Console.ForegroundColor = match ? ConsoleColor.Green : ConsoleColor.Red;
                 Console.WriteLine(match);

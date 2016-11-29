@@ -62,9 +62,9 @@ namespace ThinnestTuring
         public static List<State> FromLaTeX(string input){
             var states = new List<State>();
             foreach (Match mtch in Regex.Matches(input,
-                @"\\node\[(?<mod>accepting,|initial,|)[ ]*state\][ ]*\(q(?<index>\d+|e|e\d+)\);",
+                @"\\node\[(?<mod>accepting,|initial,|)[ ]*state\][ ]*\(q(?<index>\d+|e|e\d+)\)",
                 RegexOptions.Singleline | RegexOptions.IgnoreCase)) {
-                switch (mtch.Groups["index"].Value) {
+                switch (mtch.Groups["mod"].Value) {
                     case "accepting,":
                         states.Add(new AcceptingState(-1 - states.Count(s => s is AcceptingState)));
                         break;
@@ -72,7 +72,7 @@ namespace ThinnestTuring
                         states.Add(new State(0, "initial,"));
                         break;
                     case "":
-                        states.Add(new State(int.Parse(mtch.Groups["mod"].Value)));
+                        states.Add(new State(int.Parse(mtch.Groups["index"].Value)));
                         break;
                 }
             }
