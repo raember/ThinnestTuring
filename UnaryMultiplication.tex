@@ -1,0 +1,61 @@
+\documentclass{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[german]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{pifont}
+\usepackage[normalem]{ulem}
+\usepackage{tikz}
+\usetikzlibrary{automata,arrows,decorations.pathreplacing}
+\usepackage{tikz}
+\tikzstyle{automat}=[>=triangle 45,node distance=5cm,auto]
+\tikzstyle{every initial by arrow}=[initial text={}]
+\tikzstyle{every state}=[semithick]
+\tikzstyle{accepting by double}=[double distance=.5mm,outer sep=.3pt+.25mm]
+\tikzstyle{state}=[draw,circle,fill=white,minimum size=23pt,font=\small]
+\begin{document}
+\begin{tikzpicture}[shorten >=0.5pt,node distance=6cm,>=latex,semithick,bend angle=15,every node/.style={font=\footnotesize}]
+\node[initial,state](q0) {$q_{0}$};
+\node[state](q1)[below of = q0] {$q_{1}$};
+\node[state](q2)[right of = q0] {$q_{2}$};
+\node[state](q3)[below of = q2] {$q_{3}$};
+\node[state](q4)[right of = q2] {$q_{4}$};
+\node[state](q5)[below of = q4] {$q_{5}$};
+\node[state](q6)[below of = q5] {$q_{6}$};
+\node[state](q7)[node distance=10cm,below left of = q5] {$q_{7}$};
+\node[state](q8)[node distance=10cm,below left of = q7] {$q_{8}$};
+\node[state](q9)[node distance=10cm,below right of = q8] {$q_{9}$};
+\node[state](q10)[node distance=10cm,above right of = q9] {$q_{10}$};
+\node[accepting,state](qe)[node distance=7.07cm,below of = q7] {$q_{e}$};
+
+\path[->]
+(q0) edge node[left]{$1**/_**,RSS$} (q1)
+(q0) edge node[above]{$0**/\_1*,RLS$} (q2)
+(q1) edge[out=170,in=190,loop] node[above left]{$0**/0**,RSS$} (q1)
+(q1) edge[out=250,in=160] node[left]{$\_**/\_**,SSS$} (qe)
+(q2) edge node[left]{$1**/_**,RSS$} (q3)
+(q2) edge node[above]{$0**/\_00,RLL$} (q4)
+(q3) edge[out=170,in=190,loop] node[above left]{$0**/0*0,RSL$} (q3)
+(q3) edge[out=230,in=120] node[left]{$\_**/\_**,SRR$} (qe)
+(q4) edge[out=80,in=100,loop] node[above]{$0**/\_00,RLL$} (q4)
+(q4) edge node[left]{$1**/\_*0,RRL$} (q5)
+(q5) edge node[above left]{$\_**/\_**,SSR$} (q6)
+(q5) edge node[left]{$00*/01*,RSS$} (q7)
+(q6) edge[out=170,in=190,loop] node[above left]{$**0/**\_,SSR$} (q6)
+(q6) edge[out=270,in=15] node[rotate=45,below right]{$**\_/**\_,SSS$} (qe)
+(q7) edge node[rotate=45,above right]{$01*/010,RRL$} (q8)
+(q7) edge node[rotate=90,above]{$\_1*/\_1*,SSR$} (qe)
+(q8) edge[out=170,in=190,loop] node[above left]{$*0*/*00,SRL$} (q8)
+(q8) edge node[rotate=-45,above]{$01*/010,SSL$} (q9)
+(q8) edge node[above]{$\_1*/\_10,SRS$} (qe)
+(q9) edge node[rotate=45,above]{$01*/010,RLL$} (q10)
+(q9) edge node[rotate=90,above]{$\_1*/\_1*,SRR$} (qe)
+(q10) edge[out=-10,in=10,loop] node[above right]{$*0*/*00,SLL$} (q10)
+(q10) edge node[rotate=-45,above]{$01*/*10,SSL$} (q7)
+(q10) edge node[above]{$\_1*/\_10,SSS$} (qe)
+;
+\end{tikzpicture}
+\end{document}

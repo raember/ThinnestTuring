@@ -1,0 +1,38 @@
+\documentclass{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[german]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{pifont}
+\usepackage[normalem]{ulem}
+\usepackage{tikz}
+\usetikzlibrary{automata,arrows,decorations.pathreplacing}
+\usepackage{tikz}
+\tikzstyle{automat}=[>=triangle 45,node distance=5cm,auto]
+\tikzstyle{every initial by arrow}=[initial text={}]
+\tikzstyle{every state}=[semithick]
+\tikzstyle{accepting by double}=[double distance=.5mm,outer sep=.3pt+.25mm]
+\tikzstyle{state}=[draw,circle,fill=white,minimum size=23pt,font=\small]
+\begin{document}
+\begin{tikzpicture}[shorten >=0.5pt,node distance=5cm,>=latex,semithick,bend angle=15,every node/.style={font=\footnotesize}]
+\node[initial,state](q0) {$q_{0}$};
+\node[state](q1)[right of = q0] {$q_{1}$};
+\node[state](q2)[above right of = q1] {$q_{2}$};
+\node[state](q3)[below right of = q1] {$q_{3}$};
+\node[accepting,state](qe)[below of = q1] {$q_{e}$};
+
+\path[->]
+(q0) edge[out=80,in=100,loop] node[above]{$0**/\_0*,RLS$} (q0)
+(q0) edge node[above]{$1**/\_**,RRS$} (q1)
+(q1) edge node[above left]{$0**/0**,RSS$} (q2)
+(q1) edge node[above left]{$\_**/\_**,SSS$} (qe)
+(q2) edge[out=80,in=100,loop] node[above]{$*0\_/*00,SRR$} (q2)
+(q2) edge node[right]{$*\_*/*\_*,SLS$} (q3)
+(q3) edge[out=-10,in=10,loop] node[right]{$*0*/*0*,SLS$} (q3)
+(q3) edge node[above,rotate=-45]{$*\_*/*\_*,SRS$} (q1)
+;
+\end{tikzpicture}
+\end{document}

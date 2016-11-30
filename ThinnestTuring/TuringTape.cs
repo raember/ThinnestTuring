@@ -63,13 +63,8 @@ namespace ThinnestTuring
             for (var index = minIndex; index < maxIndex; index++) {
                 if (index == headPosition) {
                     if (state is AcceptingState) {
-                        if (final) {
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.Write(state);
-                        } else {
-                            Console.ForegroundColor = ConsoleColor.DarkGreen;
-                            Console.Write(state);
-                        }
+                        Console.ForegroundColor = final ? ConsoleColor.Green : ConsoleColor.DarkGreen;
+                        Console.Write(state);
                     } else if (state is DroppingState) {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write("X");
@@ -90,7 +85,7 @@ namespace ThinnestTuring
                     Console.Write('_');
                 }
             }
-			Console.ResetColor();
+            Console.ResetColor();
         }
 
         public override string ToString(){

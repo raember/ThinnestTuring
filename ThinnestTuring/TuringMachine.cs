@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.IO;
-using System.Net;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace ThinnestTuring
 {
     public class TuringMachine
     {
+        private readonly List<State> yetToWriteStates = new List<State>();
         private bool checkedTransitions;
 
         public TuringMachine(){
@@ -22,7 +21,7 @@ namespace ThinnestTuring
         public List<TuringTape> Tapes {get;}
         public int CalculatedSteps {get; private set;}
         public TuringMode Mode {get; set;}
-        public List<State> States {get; private set; }
+        public List<State> States {get; private set;}
         public State CurrentState {get; set;}
 
         public bool Initialize(){
@@ -85,99 +84,95 @@ namespace ThinnestTuring
         }
 
         public string ToLaTeX(){
-			var str = new List<string>();
+            var str = new List<string>();
             var startState = States.First();
             yetToWriteStates.Remove(startState);
             var strStates = recursiveStateToLaTeX(startState);
             strStates.Insert(0, startState.ToLaTeX());
 
-            str.Add("\\begin{tikzpicture}[shorten >=0.5pt,node distance=3.5cm,>=latex,semithick,bend angle=15,every node/.style={font=\\footnotesize}]");
-			str.AddRange(strStates);
+            str.Add(
+                "\\begin{tikzpicture}[shorten >=0.5pt,node distance=3.5cm,>=latex,semithick,bend angle=15,every node/.style={font=\\footnotesize}]");
+            str.AddRange(strStates);
             str.Add(string.Empty);
             str.Add("\\path[->]");
             var trans = new List<Transition>();
             foreach (var s in States) { trans.AddRange(s.Transitions); }
             str.AddRange(trans.Distinct().ToList().Select(t => t.ToLaTeX()));
             str.Add(";");
-			str.Add("\\end{tikzpicture}");
+            str.Add("\\end{tikzpicture}");
             return string.Join("\n", str);
-		}
+        }
 
-        private List<State> yetToWriteStates = new List<State>();
+        private List<string> recursiveStateToLaTeX(State from){
+            var str = new List<string>();
+            var transitions = from.Transitions.Where(t => !t.FromState.Equals(t.ToState)).ToList();
+            var count = 1;
+            if (!transitions.Any()) { return str; }
+            foreach (var trans in transitions) {
+                var to = trans.ToState;
+                if (!yetToWriteStates.Contains(to)) { continue; }
+                switch (count) {
+                    case 1:
+                        str.Add(to.ToLaTeX(from, "right"));
+                        break;
+                    case 2:
+                        str.Add(to.ToLaTeX(from, "above right"));
+                        break;
+                    case 3:
+                        str.Add(to.ToLaTeX(from, "below right"));
+                        break;
+                    case 4:
+                        str.Add(to.ToLaTeX(from, "above"));
+                        break;
+                    case 5:
+                        str.Add(to.ToLaTeX(from, "below"));
+                        break;
+                    case 6:
+                        str.Add(to.ToLaTeX(from, "above left"));
+                        break;
+                    case 7:
+                        str.Add(to.ToLaTeX(from, "below left"));
+                        break;
+                    default:
+                        str.Add(to.ToLaTeX(from, "right"));
+                        break;
+                }
+                yetToWriteStates.Remove(to);
+                str.AddRange(recursiveStateToLaTeX(to));
+                count++;
+            }
+            return str;
+        }
 
-		private List<string> recursiveStateToLaTeX(State from) {
-		    var str = new List<string>();
-			var transitions = from.Transitions.Where(t => !t.FromState.Equals(t.ToState)).ToList();
-			var count = 1;
-			if (!transitions.Any()) {
-				return str;
-			}
-			foreach (var trans in transitions) {
-			    var to = trans.ToState;
-			    if (!yetToWriteStates.Contains(to)) { continue; }
-			    switch (count) {
-					case 1:
-						str.Add(to.ToLaTeX(from, "right"));
-						break;
-					case 2:
-						str.Add(to.ToLaTeX(from, "above right"));
-						break;
-					case 3:
-						str.Add(to.ToLaTeX(from, "below right"));
-						break;
-					case 4:
-						str.Add(to.ToLaTeX(from, "above"));
-						break;
-					case 5:
-						str.Add(to.ToLaTeX(from, "below"));
-						break;
-					case 6:
-						str.Add(to.ToLaTeX(from, "above left"));
-						break;
-					case 7:
-						str.Add(to.ToLaTeX(from, "below left"));
-						break;
-					default:
-						str.Add(to.ToLaTeX(from, "right"));
-						break;
-				}
-			    yetToWriteStates.Remove(to);
-			    str.AddRange(recursiveStateToLaTeX(to));
-				count++;
-			}
-			return str;
-		}
+        public void ToLaTeXDocument(string filename = "output.tex"){
+            var file = new FileInfo(filename);
+            using (var strWrtr = new StreamWriter(file.Create())) {
+                strWrtr.WriteLine("\\documentclass{standalone}");
 
-		public void ToLaTeXDocument(string filename = "output.tex") {
-		    var file = new FileInfo(filename);
-			using (var strWrtr = new StreamWriter(file.Create())) {
-				strWrtr.WriteLine("\\documentclass{standalone}");
+                strWrtr.WriteLine("\\usepackage[utf8]{inputenc}");
+                strWrtr.WriteLine("\\usepackage[german]{babel}");
+                strWrtr.WriteLine("\\usepackage[T1]{fontenc}");
+                strWrtr.WriteLine("\\usepackage{amsmath}");
+                strWrtr.WriteLine("\\usepackage{amsfonts}");
+                strWrtr.WriteLine("\\usepackage{amssymb}");
+                strWrtr.WriteLine("\\usepackage{graphicx}");
+                strWrtr.WriteLine("\\usepackage{pifont}");
+                strWrtr.WriteLine("\\usepackage[normalem]{ulem}");
+                strWrtr.WriteLine("\\usepackage{tikz}");
+                strWrtr.WriteLine("\\usetikzlibrary{automata,arrows,decorations.pathreplacing}");
+                strWrtr.WriteLine("\\usepackage{tikz}");
+                strWrtr.WriteLine("\\tikzstyle{automat}=[>=triangle 45,node distance=5cm,auto]");
+                strWrtr.WriteLine("\\tikzstyle{every initial by arrow}=[initial text={}]");
+                strWrtr.WriteLine("\\tikzstyle{every state}=[semithick]");
+                strWrtr.WriteLine("\\tikzstyle{accepting by double}=[double distance=.5mm,outer sep=.3pt+.25mm]");
+                strWrtr.WriteLine("\\tikzstyle{state}=[draw,circle,fill=white,minimum size=23pt,font=\\small]");
+                strWrtr.WriteLine("\\begin{document}");
+                strWrtr.WriteLine(ToLaTeX());
+                strWrtr.Write("\\end{document}");
+            }
+        }
 
-				strWrtr.WriteLine("\\usepackage[utf8]{inputenc}");
-				strWrtr.WriteLine("\\usepackage[german]{babel}");
-				strWrtr.WriteLine("\\usepackage[T1]{fontenc}");
-				strWrtr.WriteLine("\\usepackage{amsmath}");
-				strWrtr.WriteLine("\\usepackage{amsfonts}");
-				strWrtr.WriteLine("\\usepackage{amssymb}");
-				strWrtr.WriteLine("\\usepackage{graphicx}");
-				strWrtr.WriteLine("\\usepackage{pifont}");
-				strWrtr.WriteLine("\\usepackage[normalem]{ulem}");
-				strWrtr.WriteLine("\\usepackage{tikz}");
-				strWrtr.WriteLine("\\usetikzlibrary{automata,arrows,decorations.pathreplacing}");
-				strWrtr.WriteLine("\\usepackage{tikz}");
-				strWrtr.WriteLine("\\tikzstyle{automat}=[>=triangle 45,node distance=5cm,auto]");
-				strWrtr.WriteLine("\\tikzstyle{every initial by arrow}=[initial text={}]");
-				strWrtr.WriteLine("\\tikzstyle{every state}=[semithick]");
-				strWrtr.WriteLine("\\tikzstyle{accepting by double}=[double distance=.5mm,outer sep=.3pt+.25mm]");
-				strWrtr.WriteLine("\\tikzstyle{state}=[draw,circle,fill=white,minimum size=23pt,font=\\small]");
-				strWrtr.WriteLine("\\begin{document}");
-				strWrtr.WriteLine(ToLaTeX());
-				strWrtr.Write("\\end{document}");
-			}
-		}
-
-        public static TuringMachine FromLaTeXDocument(string filename)
-        {
+        public static TuringMachine FromLaTeXDocument(string filename){
             var file = new FileInfo(filename);
             if (!file.Exists) { return null; }
             var content = Regex.Match(File.ReadAllText(file.FullName),

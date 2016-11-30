@@ -10,162 +10,136 @@ namespace ThinnestTuring
     internal class MainClass
     {
         private static TuringMachine TM = new TuringMachine();
-        private static bool modeSet;
         private static TuringMode mode = TuringMode.Step;
 
-        public static void Main(string[] args)
-        {
-            var cmnd = new CommandLineOption();
-            if (Parser.Default.ParseArguments(args, cmnd)) {
-
-            }
-
+        public static void Main(string[] args){
             MainAsync(args).Wait();
         }
 
         public static async Task MainAsync(string[] args){
-            var inputWord = string.Empty;
-            var outputLaTeX = false;
             var loop = true;
-            var loopOnlyOnce = false;
-            var latexFileInputSet = false;
-            var latexFileInput = "output.tex";
-            var latexFileOutputSet = false;
-            var latexFileOutput = "output.tex";
-            var latexSet = false;
-            foreach (var arg in args) {
-                switch (arg) {
-                    case "-s": case "-step":
-                        EnterStepMode();
-                        latexFileInputSet = false;
-                        latexFileOutputSet = false;
-                        break;
-                    case "-r": case "-run":
-                        EnterRunMode();
-                        latexFileInputSet = false;
-                        latexFileOutputSet = false;
-                        break;
-                    case "-latexin": case "-in":
-                        outputLaTeX = true;
-                        latexFileInputSet = true;
-                        latexFileOutputSet = false;
-                        break;
-                    case "-latexout": case "-out":
-                        outputLaTeX = true;
-                        latexFileInputSet = false;
-                        latexFileOutputSet = true;
-                        break;
-                    default:
-                        latexSet = latexSet || latexFileInputSet || latexFileOutputSet;
-                        if (latexFileInputSet) {
-                            latexFileInput = arg;
-                            latexFileInputSet = false;
-                        } else if (latexFileOutputSet) {
-                            latexFileOutput = arg;
-                            latexFileOutputSet = false;
-                        } else {
-                            inputWord = arg;
-                        }
-                        break;
-                }
-                loopOnlyOnce = true;
+            var cmndArgs = args.Any();
+            var inputWord = string.Empty;
+            var turMachInput = string.Empty;
+            var outputLoc = string.Empty;
+
+
+            //Consume possible commandline inputs
+            var cmnd = new CommandLineOption();
+            if (!Parser.Default.ParseArguments(args, cmnd)) {
+                Environment.Exit(Parser.DefaultExitCodeFail);
             }
+            if (cmnd.Run) { mode = TuringMode.Run; }
+            outputLoc = cmnd.Output;
+            turMachInput = cmnd.TuringMachineLocation;
+            inputWord = cmnd.Word;
+
+            var loopOnlyOnce = cmndArgs;
+
+            //Setup
             Console.OutputEncoding = Encoding.UTF8;
             Console.InputEncoding = Encoding.UTF8;
-            Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine("THE THINNEST TURING");
             Console.WriteLine("===================");
-            Console.ResetColor();
-            if (!modeSet) {
-                Console.WriteLine("Please select mode [s/r]:");
-                while (!modeSet) {
-                    var modeInput = Console.ReadLine();
-                    if (string.IsNullOrEmpty(modeInput)){modeInput = string.Empty;}
-                    switch (modeInput.ToLower()) {
-                        case "r": case "run":
-                            EnterRunMode();
-                            Console.WriteLine("Entered RUN mode.");
-                            break;
-                        case "s": case "step":
-                            EnterStepMode();
-                            Console.WriteLine("Entered STEP mode.");
-                            break;
-                        default:
-                            Console.WriteLine("Please select mode [s/r]:");
-                            break;
-                    }
-                }
+            if (!cmndArgs) {
+                mode = ChooseMode();
+                turMachInput = SpecifyInput();
+                outputLoc = SpecifyOutput();
             }
-            var correctOutput = latexFileOutputSet;
-            if (!latexSet && !args.Any()) {
-				Console.WriteLine("Do you wish a LaTeX output?(writes into {0}) [y/n]:", latexFileOutput);
-                while (!correctOutput) {
-                    var modeInput = Console.ReadLine().ToLower();
-                    correctOutput = true;
-                    switch (modeInput) {
-                        case "y":
-                            outputLaTeX = true;
-                            latexFileOutputSet = true;
-                            break;
-                        case "n":
-                            latexFileOutputSet = true;
-                            break;
-                        default:
-                            Console.WriteLine("Do you wish a LaTeX output?(writes into {0}) [y/n]:", latexFileOutput);
-                            correctOutput = false;
-                            break;
-                    }
-                }
-            }
+
+            //Loop as long as the user wants to compute words. Except if the word was given in the arguments.
             while (loop) {
-                if (string.IsNullOrEmpty(inputWord)) { Console.WriteLine("Please enter a word."); }
-//                TM = new TuringMachine();
-                TM = TuringMachine.FromLaTeXDocument(latexFileInput);
+                if (string.IsNullOrWhiteSpace(turMachInput)) {
+                    //No input file specified. Create the standard Turing Machine.
+                    TM = new TuringMachine();
+                    CreateUltimateUnaryMultiplicationStates(TM);
+                } else {
+                    TM = TuringMachine.FromLaTeXDocument(turMachInput);
+                }
                 TM.Mode = mode;
-//                CreateUltimateUnaryMultiplicationStates(TM);
                 TM.Initialize();
 
-                if (string.IsNullOrEmpty(inputWord)) { inputWord = Console.ReadLine(); }
-                if ("exit".Equals(inputWord) || "quit".Equals(inputWord)) { break; }
-                var reg = Regex.Match(inputWord, "(0*)1(0*)");
-                var int1 = reg.Groups[1].Value.Length;
-                var int2 = reg.Groups[2].Value.Length;
-                var res = int1*int2;
+                if (string.IsNullOrEmpty(inputWord)) {
+                    Console.WriteLine("Please enter a word.");
+                    inputWord = Console.ReadLine();
+                }
+                if ("exit".Equals(inputWord.Trim()) || "quit".Equals(inputWord.Trim())) { break; }
 
-				var valid = await TM.ComputeAsync(inputWord);
-//				var valid = TM.Compute(inputWord);
-                Console.WriteLine();
-                var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
-                var match = (resultCalc == res);
+
+                //Do the computation
+                var valid = await TM.ComputeAsync(inputWord);
+                //var valid = TM.Compute(inputWord);
+
                 const int width = 25;
-                var whitespaceOffset = int1.ToString().Length + int2.ToString().Length + 2;
-                Console.Write("Valid word:".PadRight(width + whitespaceOffset));
+                Console.WriteLine();
+                Console.Write("Valid word:".PadRight(width));
                 Console.ForegroundColor = valid ? ConsoleColor.Green : ConsoleColor.Red;
                 Console.WriteLine(valid);
                 Console.ResetColor();
+                Console.WriteLine("Steps:".PadRight(width) + TM.CalculatedSteps);
+
+                #region "MultiplicationOutput"
+                var reg = Regex.Match(inputWord, "^(0*)1(0*)$");
+                var int1 = reg.Groups[1].Value.Length;
+                var int2 = reg.Groups[2].Value.Length;
+                var res = int1*int2;
+                var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
+                var match = (resultCalc == res);
                 Console.WriteLine("Attempted calculation:".PadRight(width) + "{0}*{1}={2}", int1, int2, res);
-                Console.WriteLine("Calculated result:".PadRight(width + whitespaceOffset) + resultCalc);
-                Console.WriteLine("Steps:".PadRight(width + whitespaceOffset) + TM.CalculatedSteps);
-                Console.Write("Match:".PadRight(width + whitespaceOffset));
+                Console.WriteLine("Calculated result:".PadRight(width) + resultCalc);
+                Console.Write("Match:".PadRight(width));
                 Console.ForegroundColor = match ? ConsoleColor.Green : ConsoleColor.Red;
                 Console.WriteLine(match);
                 Console.ResetColor();
+                #endregion
+
                 inputWord = string.Empty;
                 loop = !loopOnlyOnce;
             }
-			if (outputLaTeX) { TM.ToLaTeXDocument(); }
+            if (!string.IsNullOrWhiteSpace(outputLoc)) { TM.ToLaTeXDocument(outputLoc); }
         }
 
-        private static void EnterStepMode()
-        {
-            mode = TuringMode.Step;
-            modeSet = true;
+        private static TuringMode ChooseMode(){
+            Console.WriteLine("Please select mode [s/r]:");
+            while (true) {
+                var modeInput = Console.ReadLine();
+                if (string.IsNullOrEmpty(modeInput)) { modeInput = string.Empty; }
+                switch (modeInput.ToLower()) {
+                    case "r":
+                    case "run":
+                        Console.WriteLine("Entered RUN mode.");
+                        return TuringMode.Run;
+                    case "s":
+                    case "step":
+                        Console.WriteLine("Entered STEP mode.");
+                        return TuringMode.Step;
+                    default:
+                        Console.WriteLine("Please select mode [s/r]:");
+                        break;
+                }
+            }
         }
 
-        private static void EnterRunMode()
-        {
-            mode = TuringMode.Run;
-            modeSet = true;
+        private static string SpecifyOutput(){
+            Console.WriteLine("Please write the path to the output file(leave empty for no output):");
+            var outputLoc = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(outputLoc)) {
+                Console.WriteLine("No output file will be created.");
+            } else {
+                Console.WriteLine("The output will be written into \"{0}\".", outputLoc);
+            }
+            return outputLoc;
+        }
+
+        private static string SpecifyInput(){
+            Console.WriteLine("Please write the path to the input file(leave empty for no input):");
+            var turMachInput = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(turMachInput)) {
+                Console.WriteLine("No input file will be created. The standard Turing Machine will be created.");
+            } else {
+                Console.WriteLine("The Turing Machine will be created like specified in \"{0}\".", turMachInput);
+            }
+            return turMachInput;
         }
 
         private static void CreateUnaryMultiplicationStates(TuringMachine tm){
@@ -338,14 +312,14 @@ namespace ThinnestTuring
             Q5.AddTransition("00*/01*,RSS", Q7);
 
             //y*1=y
-//            Q5.AddTransition("_**/_**,SSS", Q6);
-//            Q6.AddTransition("*0*/*00,SRL");
-//            Q6.AddTransition("*1*/*10,SRS", QE);
+            //            Q5.AddTransition("_**/_**,SSS", Q6);
+            //            Q6.AddTransition("*0*/*00,SRL");
+            //            Q6.AddTransition("*1*/*10,SRS", QE);
 
             //Trivial cases covered
             //y*x| y>1 & x>1
-//            Q5.AddTransition("00*/000,SRL");
-//            Q5.AddTransition("01*/010,SSL", Q9);
+            //            Q5.AddTransition("00*/000,SRL");
+            //            Q5.AddTransition("01*/010,SSL", Q9);
             Q7.AddTransition("01*/010,RRL", Q8);
             Q7.AddTransition("_1*/_1*,SSR", QE);
             Q8.AddTransition("*0*/*00,SRL");
