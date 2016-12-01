@@ -13,10 +13,10 @@ namespace ThinnestTuring
         private static TuringMode mode = TuringMode.Step;
 
         public static void Main(string[] args){
-            MainAsync(args).Wait();
-        }
-
-        public static async Task MainAsync(string[] args){
+//            MainAsync(args).Wait();
+//        }
+//
+//        public static async Task MainAsync(string[] args){
             var loop = true;
             var cmndArgs = args.Any();
             var inputWord = string.Empty;
@@ -52,7 +52,7 @@ namespace ThinnestTuring
                 if (string.IsNullOrWhiteSpace(turMachInput)) {
                     //No input file specified. Create the standard Turing Machine.
                     TM = new TuringMachine();
-                    CreateUltimateUnaryMultiplicationStates(TM);
+                    CreateOneTapeUnaryMultiplicationStates(TM);
                 } else {
                     TM = TuringMachine.FromLaTeXDocument(turMachInput);
                 }
@@ -67,8 +67,8 @@ namespace ThinnestTuring
 
 
                 //Do the computation
-                var valid = await TM.ComputeAsync(inputWord);
-                //var valid = TM.Compute(inputWord);
+                //var valid = await TM.ComputeAsync(inputWord);
+                var valid = TM.Compute(inputWord);
 
                 const int width = 25;
                 Console.WriteLine();
@@ -333,6 +333,57 @@ namespace ThinnestTuring
             Q10.AddTransition("*0*/*00,SLL");
             Q10.AddTransition("01*/*10,SSL", Q7);
             Q10.AddTransition("_1*/_10,SSS", QE);
+        }
+
+        private static void CreateOneTapeUnaryMultiplicationStates(TuringMachine tm){
+            var Q0 = tm.CreateState();
+            var Q1 = tm.CreateState();
+            var Q2 = tm.CreateState();
+            var Q3 = tm.CreateState();
+            var Q4 = tm.CreateState();
+            var Q5 = tm.CreateState();
+            var Q6 = tm.CreateState();
+            var Q7 = tm.CreateState();
+            var Q8 = tm.CreateState();
+            var Q9 = tm.CreateState();
+            var Q10 = tm.CreateState();
+            var Q11 = tm.CreateState();
+            var QE1 = tm.CreateAcceptingState();
+            var QE2 = tm.CreateAcceptingState();
+
+            Q0.AddTransition("0/_,R", Q1);
+            Q0.AddTransition("1/_,R", QE1);
+
+            Q1.AddTransition("0/_,R", Q2);
+            Q1.AddTransition("1/_,R", QE2);
+
+            Q2.AddTransition("0/0,R");
+            Q2.AddTransition("1/1,R", Q3);
+
+            Q3.AddTransition("X/X,R");
+            Q3.AddTransition("1/1,R");
+            Q3.AddTransition("_/_,L", Q10);
+            Q3.AddTransition("0/0,R", Q11);
+
+            Q11.AddTransition("0/0,R");
+            Q11.AddTransition("X/X,L", Q10);
+            Q11.AddTransition("_/_,L", Q10);
+
+            Q10.AddTransition("0/X,R", Q4);
+
+            Q4.AddTransition("X/X,R");
+            Q4.AddTransition("0/0,R");
+            Q4.AddTransition("_/0,L", Q5);
+
+            Q5.AddTransition("0/0,L");
+            Q5.AddTransition("X/X,L", Q6);
+
+            Q6.AddTransition("X/X,L");
+            Q6.AddTransition("0/0,L", Q3);
+            Q6.AddTransition("1/1,L", Q7);
+
+            Q7.AddTransition("0/0,L");
+            Q7.AddTransition("_/_,R", Q1);
         }
     }
 }
