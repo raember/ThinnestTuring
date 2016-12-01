@@ -39,8 +39,8 @@ namespace ThinnestTuring
             //Setup
             Console.OutputEncoding = Encoding.UTF8;
             Console.InputEncoding = Encoding.UTF8;
-            Console.WriteLine("THE THINNEST TURING");
-            Console.WriteLine("===================");
+            Console.WriteLine("THE [THIN]NEST TURING");
+            Console.WriteLine("=====================");
             if (!cmndArgs) {
                 mode = ChooseMode();
                 turMachInput = SpecifyInput();
@@ -79,18 +79,21 @@ namespace ThinnestTuring
                 Console.WriteLine("Steps:".PadRight(width) + TM.CalculatedSteps);
 
                 #region "MultiplicationOutput"
-                var reg = Regex.Match(inputWord, "^(0*)1(0*)$");
-                var int1 = reg.Groups[1].Value.Length;
-                var int2 = reg.Groups[2].Value.Length;
-                var res = int1*int2;
-                var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
-                var match = (resultCalc == res);
-                Console.WriteLine("Attempted calculation:".PadRight(width) + "{0}*{1}={2}", int1, int2, res);
-                Console.WriteLine("Calculated result:".PadRight(width) + resultCalc);
-                Console.Write("Match:".PadRight(width));
-                Console.ForegroundColor = match ? ConsoleColor.Green : ConsoleColor.Red;
-                Console.WriteLine(match);
-                Console.ResetColor();
+                if (valid)
+                {
+                    var reg = Regex.Match(inputWord, "^(0*)1(0*)$");
+                    var int1 = reg.Groups[1].Value.Length;
+                    var int2 = reg.Groups[2].Value.Length;
+                    var res = int1 * int2;
+                    var resultCalc = TM.Tapes.Last().tape.Count(c => c.Equals('0'));
+                    var match = (resultCalc == res);
+                    Console.WriteLine("Attempted calculation:".PadRight(width) + "{0}*{1}={2}", int1, int2, res);
+                    Console.WriteLine("Calculated result:".PadRight(width) + resultCalc);
+                    Console.Write("Match:".PadRight(width));
+                    Console.ForegroundColor = match ? ConsoleColor.Green : ConsoleColor.Red;
+                    Console.WriteLine(match);
+                    Console.ResetColor();
+                }
                 #endregion
 
                 inputWord = string.Empty;

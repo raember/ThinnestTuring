@@ -12,8 +12,7 @@ namespace ThinnestTuring
         [Option('i', "input", HelpText = "Creates the Turing Machine like specified in the given LaTeX file")]
         public string TuringMachineLocation {get; set;}
 
-        [Option('o', "output", DefaultValue = "output.tex",
-            HelpText = "Sets the LaTeX output file to export the Turing machine to")]
+        [Option('o', "output", HelpText = "Sets the LaTeX output file to export the Turing machine to")]
         public string Output {get; set;}
 
         [ValueOption(0)]
@@ -22,7 +21,7 @@ namespace ThinnestTuring
         [HelpOption('h',"help")]
         public string GetUsage(){
             var help = new HelpText {
-                Heading = new HeadingInfo("The Thinnest Turing", "v0.1"),
+                Heading = new HeadingInfo("The [THIN]nest Turing", "v0.1"),
                 Copyright = new CopyrightInfo("Raphael Emberger", 2016),
                 AdditionalNewLineAfterOption = true,
                 AddDashesToOption = true
