@@ -354,8 +354,12 @@ namespace ThinnestTuring
             Q0.AddTransition("0/_,R", Q1);
             Q0.AddTransition("1/_,R", QE1);
 
+            QE1.AddTransition("0/_,R");
+
             Q1.AddTransition("0/_,R", Q2);
             Q1.AddTransition("1/_,R", QE2);
+
+            QE2.AddTransition("X/0,R");
 
             Q2.AddTransition("0/0,R");
             Q2.AddTransition("1/1,R", Q3);
@@ -370,6 +374,7 @@ namespace ThinnestTuring
             Q11.AddTransition("_/_,L", Q10);
 
             Q10.AddTransition("0/X,R", Q4);
+            Q10.AddTransition("1/1,L", Q7);
 
             Q4.AddTransition("X/X,R");
             Q4.AddTransition("0/0,R");

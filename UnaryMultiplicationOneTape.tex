@@ -1,0 +1,61 @@
+\documentclass{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[german]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{pifont}
+\usepackage[normalem]{ulem}
+\usepackage{tikz}
+\usetikzlibrary{automata,arrows,decorations.pathreplacing}
+\usepackage{tikz}
+\tikzstyle{automat}=[>=triangle 45,node distance=5cm,auto]
+\tikzstyle{every initial by arrow}=[initial text={}]
+\tikzstyle{every state}=[semithick]
+\tikzstyle{accepting by double}=[double distance=.5mm,outer sep=.3pt+.25mm]
+\tikzstyle{state}=[draw,circle,fill=white,minimum size=23pt,font=\small]
+\begin{document}
+\begin{tikzpicture}[shorten >=0.5pt,node distance=3.5cm,>=latex,semithick,bend angle=15,every node/.style={font=\footnotesize}]
+\node[initial,state](q0) {$q_{0}$};
+\node[state](q1)[right of = q0] {$q_{1}$};
+\node[state](q2)[right of = q1] {$q_{2}$};
+\node[state](q3)[right of = q2] {$q_{3}$};
+\node[state](q10)[right of = q3] {$q_{10}$};
+\node[state](q4)[right of = q10] {$q_{4}$};
+\node[state](q5)[right of = q4] {$q_{5}$};
+\node[state](q6)[right of = q5] {$q_{6}$};
+\node[state](q7)[right of = q6] {$q_{7}$};
+\node[state](q11)[below right of = q3] {$q_{11}$};
+\node[accepting,state](qe2)[below of = q1] {$q_{e}$};
+\node[accepting,state](qe)[below of = q0] {$q_{e}$};
+
+\path[->]
+(q0) edge node[above]{$0/\_,R$} (q1)
+(q0) edge node[left]{$1/\_,R$} (qe)
+(q1) edge node[above]{$0/\_,R$} (q2)
+(q1) edge node[left]{$1/\_,R$} (qe2)
+(q2) edge[out=80,in=100,loop] node[above]{$0/0,R$} (q2)
+(q2) edge node[above]{$1/1,R$} (q3)
+(q3) edge[out=260,in=280,loop] node[below,text width=1cm]{$X/X,R$\\$1/1,R$} (q3)
+(q3) edge node[above]{$\_/\_,L$} (q10)
+(q3) edge node[above right]{$0/0,R$} (q11)
+(q4) edge[out=260,in=280,loop] node[below,text width=1cm]{$X/X,R$\\$0/0,R$} (q4)
+(q4) edge node[above]{$\_/0,L$} (q5)
+(q5) edge[out=260,in=280,loop] node[below]{$0/0,L$} (q5)
+(q5) edge node[above]{$X/X,L$} (q6)
+(q6) edge[out=260,in=280,loop] node[below]{$X/X,L$} (q6)
+(q6) edge[out=160,in=20] node[above]{$0/0,L$} (q3)
+(q6) edge node[above]{$1/1,L$} (q7)
+(q7) edge[out=260,in=280,loop] node[below]{$0/0,L$} (q7)
+(q7) edge[out=160,in=30] node[above]{$\_/\_,R$} (q1)
+(q10) edge node[above]{$0/X,R$} (q4)
+(q10) edge[out=-30,in=-150] node[above]{$1/1,L$} (q7)
+(q11) edge[out=260,in=280,loop] node[below]{$0/0,R$} (q11)
+(q11) edge node[right,text width=1cm]{$X/X,L$\\$\_/\_,L$} (q10)
+(qe) edge[out=260,in=280,loop] node[below]{$0/\_,R$} (qe)
+(qe2) edge[out=260,in=280,loop] node[below]{$X/0,R$} (qe2)
+;
+\end{tikzpicture}
+\end{document}
